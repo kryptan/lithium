@@ -1,0 +1,8 @@
+[package]
+name = "lithium_core"
+version = "0.1.0"
+authors = ["kryptan"]
+
+[dependencies]
+num-traits = "0.1"
+rand = "0.3"
