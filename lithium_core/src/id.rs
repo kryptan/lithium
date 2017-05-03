@@ -22,7 +22,6 @@ impl From<Id> for Rect<Var> {
     }
 }
 
-fn hash_combine(a: u64, b: u64) -> u64
-{
+fn hash_combine(a: u64, b: u64) -> u64 {
     a ^ (b.wrapping_add(a.rotate_left(17)).wrapping_add(a >> 2))
 }

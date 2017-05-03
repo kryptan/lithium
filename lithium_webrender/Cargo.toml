@@ -1,0 +1,10 @@
+[package]
+name = "lithium_webrender"
+version = "0.1.0"
+authors = ["kryptan"]
+
+[dependencies]
+lithium_core = { path = "../lithium_core" }
+
+[dependencies.webrender_traits]
+git = "https://github.com/servo/webrender"

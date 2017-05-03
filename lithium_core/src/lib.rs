@@ -19,3 +19,4 @@ pub use geometry::{Vec2, Rect};
 pub use solver::{Var};
 pub use font::Font;
 pub use gui::Gui;
+pub use widgets::Widget;

@@ -7,8 +7,8 @@ mod event;
 
 pub use self::keyboard::{Keyboard, Key};
 pub use self::mouse::{Mouse, MouseButton};
-pub use self::touch::Touch;
-pub use self::event::Event;
+pub use self::touch::{Touch};
+pub use self::event::{Event, TouchEvent, TouchPhase};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd, Debug)]
 pub enum ButtonState {

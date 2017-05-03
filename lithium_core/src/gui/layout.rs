@@ -7,7 +7,6 @@ use {Vec2, Rect};
 use util::f64_as_u64;
 
 pub struct Layout {
-    size: Vec2<f64>,
     solver: Solver,
     current_strength: Strength,
 
@@ -18,7 +17,6 @@ pub struct Layout {
 impl Default for Layout {
     fn default() -> Self {
         Layout {
-            size: Vec2::new(0.0, 0.0),
             solver: Solver::default(),
             current_strength: Strength::Medium,
 
@@ -29,7 +27,7 @@ impl Default for Layout {
 }
 
 impl Layout {
-    pub fn solve(&mut self) {
+    pub fn advance(&mut self) {
         {
             let terms = &self.new_constraints.terms;
             // FIXME: use sort_unstable_by when it is stable.
@@ -85,14 +83,6 @@ impl Layout {
 
     pub fn constraint<E: Expression>(&mut self, constraint: Constraint<E>) {
         self.new_constraints.push(constraint, self.current_strength);
-    }
-
-    pub fn resize(&mut self, size: Vec2<f64>) {
-        self.size = size;
-    }
-
-    pub fn size(&self) -> Vec2<f64> {
-        self.size
     }
 
     pub fn keep(&mut self, var: Var) {
@@ -159,40 +149,31 @@ impl Constraints {
 }
 
 fn compare_constraints(a: &ConstraintInfo, a_terms: &[Term], b: &ConstraintInfo, b_terms: &[Term]) -> Ordering {
-    match f64_as_u64(a.constant).cmp(&f64_as_u64(b.constant)) {
-        Ordering::Equal => {},
-        other => return other,
-    };
+    let order = (
+        f64_as_u64(a.constant),
+        a.terms.len(),
+        a.positive,
+        a.strength
+    ).cmp(&(
+        f64_as_u64(b.constant),
+        b.terms.len(),
+        b.positive,
+        b.strength,
+    ));
 
-    match a.terms.len().cmp(&b.terms.len()) {
-        Ordering::Equal => {},
-        other => return other,
-    };
+    order.then_with(|| {
+        for (a_term_index, b_term_index) in a.terms.clone().zip(b.terms.clone()) {
+            let a_term = &a_terms[a_term_index];
+            let b_term = &b_terms[b_term_index];
 
-    match a.positive.cmp(&b.positive) {
-        Ordering::Equal => {},
-        other => return other,
-    };
+            let order = f64_as_u64(a_term.coefficient).cmp(&f64_as_u64(b_term.coefficient))
+                .then_with(|| a_term.variable.compare_by_id(b_term.variable));
 
-    match a.strength.cmp(&b.strength) {
-        Ordering::Equal => {},
-        other => return other,
-    };
-
-    for (a_term_index, b_term_index) in a.terms.clone().zip(b.terms.clone()) {
-        let a_term = &a_terms[a_term_index];
-        let b_term = &b_terms[b_term_index];
-
-        match f64_as_u64(a_term.coefficient).cmp(&f64_as_u64(b_term.coefficient)) {
-            Ordering::Equal => {},
-            other => return other,
-        };
-
-        match a_term.variable.compare_by_id(b_term.variable) {
-            Ordering::Equal => {},
-            other => return other,
+            if order != Ordering::Equal {
+                return order;
+            }
         }
-    }
 
-    Ordering::Equal
+        return Ordering::Equal;
+    })
 }

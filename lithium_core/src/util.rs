@@ -14,7 +14,7 @@ pub struct IdIdentityHasherBuilder;
 
 impl Hasher for IdIdentityHasher {
     fn write_u64(&mut self, i: u64) {
-        self.0 = i;
+        self.0 ^= i;
     }
 
     fn finish(&self) -> u64 {
@@ -24,7 +24,7 @@ impl Hasher for IdIdentityHasher {
     }
 
     fn write(&mut self, _bytes: &[u8]) {
-        panic!("IdIdentityHasher should only be used for hashing Id");
+        panic!("IdIdentityHasher should only be used for hashing identifiers");
     }
 }
 

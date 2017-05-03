@@ -2,6 +2,7 @@ use std::f64;
 use std::collections::HashMap;
 use std::cmp::Ordering;
 use Id;
+use util::IdIdentityHasherBuilder;
 use self::row::{Row, Symbol, SymbolKind};
 use self::expression::{Expression, Term};
 
@@ -44,7 +45,7 @@ pub struct ConstraintTag {
 /// A constraint solver which uses the cassowary algorithm.
 #[derive(Clone, Default)]
 pub struct Solver {
-    rows: HashMap<Symbol, Row>,
+    rows: HashMap<Symbol, Row, IdIdentityHasherBuilder>,
     objective: Row,
 }
 
@@ -187,17 +188,12 @@ impl Solver {
     ///
     /// This method performs iterations of Phase 2 of the simplex method until the objective function reaches a minimum.
     fn optimize(&mut self) {
-        loop {
-            let entering = Self::get_entering_symbol(&self.objective);
-            if let Some(entering) = entering {
-                let (leaving, mut row) = self.get_leaving_row(entering);
-                // pivot the entering symbol into the basis
-                row.solve_for_symbols(leaving, entering);
-                self.substitute(entering, &row);
-                self.rows.insert(entering, row);
-            } else {
-                return;
-            }
+        while let Some(entering) = Self::get_entering_symbol(&self.objective) {
+            let (leaving, mut row) = self.get_leaving_row(entering);
+            // pivot the entering symbol into the basis
+            row.solve_for_symbols(leaving, entering);
+            self.substitute(entering, &row);
+            self.rows.insert(entering, row);
         }
     }
 

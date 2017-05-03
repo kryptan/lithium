@@ -1,0 +1,8 @@
+[package]
+name = "test-app"
+version = "0.1.0"
+authors = ["kryptan"]
+
+[dependencies]
+lithium_core = { path = "../lithium_core" }
+lithium_glutin = { path = "../lithium_glutin" }

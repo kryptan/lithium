@@ -1,0 +1,19 @@
+[package]
+name = "lithium_glutin"
+version = "0.1.0"
+authors = ["kryptan"]
+
+[dependencies]
+lithium_core = { path = "../lithium_core" }
+lithium_winit = { path = "../lithium_winit" }
+lithium_webrender = { path = "../lithium_webrender" }
+gleam = "0.4.3"
+glutin = "0.8"
+
+[dependencies.webrender]
+git = "https://github.com/servo/webrender"
+features = ["freetype-lib"]
+default-features = false
+
+[dependencies.webrender_traits]
+git = "https://github.com/servo/webrender"

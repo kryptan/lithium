@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::rc::Rc;
+use std::sync::Arc;
 use std::collections::HashMap;
 use std::cell::RefCell;
 use std::mem::swap;
@@ -12,13 +13,14 @@ pub struct ColorId(u64);
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub struct ElementKind(pub u64);
 
+#[derive(PartialEq)]
 pub struct Scene {
     themes: Vec<Theme>,
     commands: Vec<Command>,
 }
 
 impl Scene {
-    pub fn new(&mut self, default_theme: Theme) -> Self {
+    pub fn new(default_theme: Theme) -> Self {
         Scene {
             themes: vec![default_theme],
             commands: Vec::new(),
@@ -41,12 +43,12 @@ impl Scene {
         self.commands.push(Command::Mesh(mesh));
     }
 
-    pub fn start_element(&mut self, element: Element) {
-        self.commands.push(Command::StartElement(element));
+    pub fn start_element(&mut self) {
+        self.commands.push(Command::StartElement);
     }
 
-    pub fn close_element(&mut self) {
-        self.commands.push(Command::CloseElement);
+    pub fn close_element(&mut self, element: Element) {
+        self.commands.push(Command::CloseElement(element));
     }
 
     pub fn themed<F: FnOnce(&mut Scene)>(&mut self, theme: Theme, f: F) -> Theme {
@@ -69,25 +71,34 @@ impl Scene {
     }
 }
 
+#[derive(PartialEq)]
 pub enum Command {
-    StartElement(Element),
-    CloseElement,
+    StartElement,
+    CloseElement(Element),
     Text(Text),
     Mesh(Mesh),
-    Other(Box<Render>),
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, PartialEq)]
 pub struct Theme {
     pub colors: HashMap<ColorId, Color, IdIdentityHasherBuilder>,
     pub element_styles: HashMap<ElementKind, ElementStyle, IdIdentityHasherBuilder>,
+}
+
+impl Theme {
+    pub fn empty() -> Self {
+        Theme {
+            colors: HashMap::with_hasher(IdIdentityHasherBuilder),
+            element_styles: HashMap::with_hasher(IdIdentityHasherBuilder),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
 pub struct ElementStyle {
     pub background: Color,
     pub color: Color,
-    pub font: Rc<Font>,
+    pub font: Arc<Font>,
     pub blur_radius: f32,
 }
 
@@ -95,14 +106,14 @@ impl ElementStyle {
     pub fn error() -> Self {
         ElementStyle {
             color: Color::error(),
-            font: Rc::new(font::ErrorFont),
+            font: Arc::new(font::ErrorFont),
             blur_radius: 0.0,
             background: Color::error(),
         }
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Element {
     pub id: Id,
     pub place: Rect<f64>,
@@ -110,13 +121,13 @@ pub struct Element {
     pub style: ElementStyle,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Text {
     pub id: Id,
     pub glyphs: Rc<RefCell<Vec<Glyph>>>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Glyph {
     /// Position is relative.
     pub position: Vec2<f64>,
@@ -124,18 +135,18 @@ pub struct Glyph {
     pub glyph_id: u32,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Mesh {
     pub data: Rc<RefCell<MeshVertices>>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct MeshVertices {
     pub vertices: Vec<Vertex>,
     pub indices: Vec<u32>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Vertex {
     pub position: Vec2<f64>,
     pub color: Color,
@@ -147,3 +158,12 @@ pub struct Vertex {
 ///
 /// This trait is mostly to prevent accidentally trying to draw things which cannot be rendered.
 pub trait Render: 'static + Any {}
+
+impl PartialEq<ElementStyle> for ElementStyle {
+    fn eq(&self, other: &ElementStyle) -> bool {
+        self.background == other.background &&
+        self.color == other.color &&
+        self.blur_radius == other.blur_radius &&
+        Arc::ptr_eq(&self.font, &other.font)
+    }
+}

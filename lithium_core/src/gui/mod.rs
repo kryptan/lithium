@@ -14,17 +14,35 @@ pub struct Gui {
 }
 
 impl Gui {
-    pub fn element<F: FnOnce(&mut Gui)>(&mut self, id: Id, kind: ElementKind, f: F) {
+    pub fn new(default_theme: scene::Theme) -> Self {
+        Gui {
+            layout: Layout::default(),
+            scene: Scene::new(default_theme),
+            input: Input::default(),
+        }
+    }
+
+    pub fn element<F, R>(&mut self, id: Id, kind: ElementKind, f: F) -> R
+        where F: FnOnce(&mut Gui) -> R
+    {
         let style = self.scene.element_style(kind);
         let place = self.layout.prev_value_rect(Rect::from(id));
 
-        self.scene.start_element(Element {
+        self.scene.start_element();
+        let result = f(self);
+        self.scene.close_element(Element {
             id: id,
             style: style,
             place: place,
             kind: kind,
-        });
-        f(self);
-        self.scene.close_element(); // FIXME: execute even in case of panic
+        }); // FIXME: execute even in case of panic
+
+        result
+    }
+    
+    pub fn advance(&mut self) {
+        self.input.advance();
+        self.scene.advance();
+        self.layout.advance();
     }
 }

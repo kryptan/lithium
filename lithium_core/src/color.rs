@@ -148,8 +148,22 @@ impl Color {
         }
     }
 
+    /// Get sRGB values.
+    pub fn to_sRGB(self) -> (f32, f32, f32, f32) {
+        if self.a.abs() < 0.00001 {
+            (0.0, 0.0, 0.0, 0.0)
+        } else {
+            (
+                sRGB_oetf(self.r / self.a),
+                sRGB_oetf(self.g / self.a),
+                sRGB_oetf(self.b / self.a),
+                self.a
+            )
+        }
+    }
+
     /// Get `[r, g, b, a]` values as an array.
-    pub fn as_array(self) -> [f32; 4] {
+    pub fn to_array(self) -> [f32; 4] {
         [self.r, self.g, self.b, self.a]
     }
 

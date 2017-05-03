@@ -12,7 +12,7 @@ pub struct Segment {
     pub position: Vec2<f64>,
 }
 
-pub trait Font: Debug {
+pub trait Font: Debug + Sync + Send {
     fn shape(&self, text: &str, out: &mut Vec<Segment>);
 }
 

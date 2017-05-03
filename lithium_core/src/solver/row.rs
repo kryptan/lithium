@@ -1,5 +1,6 @@
-use {Id, Var};
 use std::collections::HashMap;
+use {Id, Var};
+use util::IdIdentityHasherBuilder;
 use super::near_zero;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
@@ -17,7 +18,7 @@ pub enum SymbolKind {
 
 #[derive(Clone, Default)]
 pub struct Row {
-    pub cells: HashMap<Symbol, f64>,
+    pub cells: HashMap<Symbol, f64, IdIdentityHasherBuilder>,
     pub constant: f64
 }
 
@@ -40,7 +41,7 @@ impl Symbol {
 impl Row {
     pub fn new(constant: f64) -> Row {
         Row {
-            cells: HashMap::new(),
+            cells: HashMap::with_hasher(IdIdentityHasherBuilder),
             constant: constant
         }
     }
