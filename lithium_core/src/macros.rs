@@ -1,9 +1,25 @@
 
 #[macro_export]
+macro_rules! color_id {
+    ($e:expr) => {
+        // FIXME: hash string
+        $crate::theme::ColorId(0)
+    }
+}
+
+#[macro_export]
 macro_rules! element_kind {
     ($e:expr) => {
         // FIXME: hash string
-        $crate::gui::scene::ElementKind(0)
+        $crate::theme::ElementKind(0)
+    }
+}
+
+#[macro_export]
+macro_rules! style_variant {
+    ($e:expr) => {
+        // FIXME: hash string
+        $crate::theme::StyleVariant(0)
     }
 }
 

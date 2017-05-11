@@ -1,7 +1,8 @@
 use self::layout::Layout;
 use self::input::Input;
-use self::scene::{Scene, Element, ElementKind};
-use {Id, Rect};
+use self::scene::{Scene, Element};
+use {Id, Rect, Theme};
+use theme::{ElementKind, StyleVariant};
 
 pub mod layout;
 pub mod input;
@@ -14,7 +15,7 @@ pub struct Gui {
 }
 
 impl Gui {
-    pub fn new(default_theme: scene::Theme) -> Self {
+    pub fn new(default_theme: Theme) -> Self {
         Gui {
             layout: Layout::default(),
             scene: Scene::new(default_theme),
@@ -40,6 +41,18 @@ impl Gui {
         result
     }
     
+    pub fn themed<F: FnOnce(&mut Gui)>(&mut self, theme: Theme, f: F) -> Theme {
+        let old_theme = self.scene.swap_theme(theme);
+        f(self);
+        self.scene.swap_theme(old_theme) // FIXME: execute even in case of panic
+    }
+
+    pub fn styled<F: FnOnce(&mut Gui)>(&mut self, style_variant: StyleVariant, f: F) -> StyleVariant {
+        let old_style = self.scene.swap_style_variant(style_variant);
+        f(self);
+        self.scene.swap_style_variant(old_style) // FIXME: execute even in case of panic
+    }
+
     pub fn advance(&mut self) {
         self.input.advance();
         self.scene.advance();

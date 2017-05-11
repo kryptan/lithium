@@ -29,7 +29,7 @@ pub fn build(commands: &[Command], builder: &mut DisplayListBuilder) {
                 builder.push_rect(
                     rect,
                     clip_region_token,
-                    lithium_color_to_webrender(element.style.background)
+                    lithium_color_to_webrender(element.style.color)
                 );
             }
             &Command::StartElement => {

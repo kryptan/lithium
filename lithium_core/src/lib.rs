@@ -12,6 +12,7 @@ pub mod font;
 pub mod gui;
 pub mod widgets;
 pub mod layout;
+pub mod theme;
 
 pub use id::Id;
 pub use color::Color;
@@ -20,3 +21,4 @@ pub use solver::{Var};
 pub use font::Font;
 pub use gui::Gui;
 pub use widgets::Widget;
+pub use theme::Theme;

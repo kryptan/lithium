@@ -1,38 +1,33 @@
 use std::any::Any;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::collections::HashMap;
 use std::cell::RefCell;
 use std::mem::swap;
-use {font, Color, Vec2, Rect, Font, Id};
-use util::IdIdentityHasherBuilder;
-
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-pub struct ColorId(u64);
-
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-pub struct ElementKind(pub u64);
+use {Color, Vec2, Rect, Theme, Id};
+use theme::{ColorId, ElementKind, ElementStyle, StyleVariant};
 
 #[derive(PartialEq)]
 pub struct Scene {
-    themes: Vec<Theme>,
+    theme: Theme,
+    style_variant: StyleVariant,
     commands: Vec<Command>,
 }
 
 impl Scene {
-    pub fn new(default_theme: Theme) -> Self {
+    pub fn new(theme: Theme) -> Self {
         Scene {
-            themes: vec![default_theme],
+            theme: theme,
+            style_variant: StyleVariant::default(),
             commands: Vec::new(),
         }
     }
 
     pub fn color(&self, id: ColorId) -> Color {
-        self.themes.iter().rev().flat_map(|theme| theme.colors.get(&id)).cloned().next().unwrap_or(Color::error())
+        self.theme.color(self.style_variant, id).unwrap_or(Color::error())
     }
 
-    pub fn element_style(&self, kind: ElementKind) -> ElementStyle {
-        self.themes.iter().rev().flat_map(|theme| theme.element_styles.get(&kind)).cloned().next().unwrap_or(ElementStyle::error())
+    pub fn element_style(&self, kind: ElementKind) -> Arc<ElementStyle> {
+        self.theme.element_style(self.style_variant, kind).unwrap_or(Arc::new(ElementStyle::default()))
     }
 
     pub fn text(&mut self, text: Text) {
@@ -51,15 +46,14 @@ impl Scene {
         self.commands.push(Command::CloseElement(element));
     }
 
-    pub fn themed<F: FnOnce(&mut Scene)>(&mut self, theme: Theme, f: F) -> Theme {
-        self.themes.push(theme);
-        f(self);
-        self.themes.pop().unwrap() // FIXME: execute even in case of panic
+    pub fn swap_theme(&mut self, mut theme: Theme) -> Theme {
+        swap(&mut self.theme, &mut theme);
+        theme
     }
 
-    pub fn swap_default_theme(&mut self, mut theme: Theme) -> Theme {
-        swap(&mut self.themes[0], &mut theme); // zeroth theme is always added in `new`.
-        theme
+    pub fn swap_style_variant(&mut self, mut style_variant: StyleVariant) -> StyleVariant {
+        swap(&mut self.style_variant, &mut style_variant);
+        style_variant
     }
 
     pub fn commands(&self) -> &[Command] {
@@ -79,46 +73,12 @@ pub enum Command {
     Mesh(Mesh),
 }
 
-#[derive(Clone, Default, PartialEq)]
-pub struct Theme {
-    pub colors: HashMap<ColorId, Color, IdIdentityHasherBuilder>,
-    pub element_styles: HashMap<ElementKind, ElementStyle, IdIdentityHasherBuilder>,
-}
-
-impl Theme {
-    pub fn empty() -> Self {
-        Theme {
-            colors: HashMap::with_hasher(IdIdentityHasherBuilder),
-            element_styles: HashMap::with_hasher(IdIdentityHasherBuilder),
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct ElementStyle {
-    pub background: Color,
-    pub color: Color,
-    pub font: Arc<Font>,
-    pub blur_radius: f32,
-}
-
-impl ElementStyle {
-    pub fn error() -> Self {
-        ElementStyle {
-            color: Color::error(),
-            font: Arc::new(font::ErrorFont),
-            blur_radius: 0.0,
-            background: Color::error(),
-        }
-    }
-}
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct Element {
     pub id: Id,
     pub place: Rect<f64>,
     pub kind: ElementKind,
-    pub style: ElementStyle,
+    pub style: Arc<ElementStyle>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -158,12 +118,3 @@ pub struct Vertex {
 ///
 /// This trait is mostly to prevent accidentally trying to draw things which cannot be rendered.
 pub trait Render: 'static + Any {}
-
-impl PartialEq<ElementStyle> for ElementStyle {
-    fn eq(&self, other: &ElementStyle) -> bool {
-        self.background == other.background &&
-        self.color == other.color &&
-        self.blur_radius == other.blur_radius &&
-        Arc::ptr_eq(&self.font, &other.font)
-    }
-}

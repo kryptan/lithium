@@ -14,7 +14,7 @@ use webrender_traits::{DeviceUintSize, LayoutPoint, LayoutRect, LayoutSize};
 use webrender_traits::{PipelineId, TransformStyle};
 use webrender_traits::{RenderApi};
 use lithium_core::Widget;
-use lithium_core::gui::scene::Theme;
+use lithium_core::Theme;
 
 struct Notifier;
 
@@ -189,16 +189,16 @@ pub fn spawn_window_with_builder<F, W, R>(window_builder: glutin::WindowBuilder<
     W: Widget,
     R: Send + 'static,
 {
-    let builder = thread::Builder::new().name("Lithium Window".to_owned());
+    let thread_builder = thread::Builder::new().name("Lithium Window".to_owned());
 
-    builder.spawn(|| {
-        let ex = Window {
+    thread_builder.spawn(|| {
+        let window = Window {
             theme,
             window_builder: window_builder,
             _marker: std::marker::PhantomData::<W>,
         };
 
-        f(ex)
+        f(window)
     }).unwrap()
 }
 
