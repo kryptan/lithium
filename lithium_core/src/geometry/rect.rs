@@ -1,4 +1,5 @@
-use std::ops::{Add, Sub, Mul};
+use std::cmp::{Ord, min, max};
+use std::ops::{Add, Sub, Mul, BitOr, BitOrAssign};
 
 use super::Vec2;
 
@@ -158,6 +159,29 @@ impl<A, B, R> Sub<Vec2<B>> for Rect<A>
             right: self.right - vec.x,
             top: self.top - vec.y,
             bottom: self.bottom - vec.y,
+        }
+    }
+}
+
+impl<T> BitOrAssign for Rect<T> 
+  where T: Ord + Copy
+{    
+    fn bitor_assign(&mut self, right: Rect<T>) {
+        *self = *self | right;
+    }
+}
+
+impl<T> BitOr for Rect<T>
+  where T: Ord
+{    
+    type Output = Rect<T>;
+
+    fn bitor(self, other: Rect<T>) -> Self::Output {
+        Rect {
+            left: min(self.left, other.left),
+            right: max(self.right, other.right),
+            top: min(self.top, other.top),
+            bottom: max(self.bottom, other.bottom),
         }
     }
 }

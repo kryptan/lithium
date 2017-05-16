@@ -7,6 +7,7 @@ mod util;
 pub mod geometry;
 mod color;
 mod id;
+pub mod image;
 pub mod solver;
 pub mod font;
 pub mod gui;

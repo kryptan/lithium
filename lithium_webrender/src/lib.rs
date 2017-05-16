@@ -15,6 +15,9 @@ pub fn build(commands: &[Command], builder: &mut DisplayListBuilder) {
     for command in commands.iter().rev() {
         match command {
             &Command::CloseElement(ref element) => {
+                for background in &element.style.background_images {
+                    
+                }
                 let rect = LayoutRect::new(
                     LayoutPoint::new(element.place.left as f32, element.place.right as f32),
                     LayoutSize::new(element.place.width() as f32, element.place.height() as f32),
@@ -29,7 +32,7 @@ pub fn build(commands: &[Command], builder: &mut DisplayListBuilder) {
                 builder.push_rect(
                     rect,
                     clip_region_token,
-                    lithium_color_to_webrender(element.style.color)
+                    lithium_color_to_webrender(element.style.font_color)
                 );
             }
             &Command::StartElement => {
