@@ -1,6 +1,8 @@
 use std;
 use cssparser;
-use cssparser::{Parser, Token};
+use cssparser::{Parser, ParseError, Token};
+#[cfg(test)]
+use cssparser::ParserInput;
 use {Color, Vec2};
 use theme::ElementStyle;
 use theme::element_style::{Overflow, BorderStyle, BackgroundPicture, BackgroundImage, LengthOrPercentage, Filter, Shadow, border, corner};
@@ -9,7 +11,7 @@ const THIN_BORDER: f32 = 1.0;
 const MEDIUM_BORDER: f32 = 2.0;
 const THICK_BORDER: f32 = 3.0;
 
-pub fn parse_property(parser: &mut Parser, property: &str, element_style: &mut ElementStyle) -> Result<(), ()> {
+pub fn parse_property<'i, 'tt>(parser: &mut Parser<'i, 'tt>, property: &str, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     let f = match_ignore_ascii_case! { property,
         "color" => color,
         "opacity" => opacity,
@@ -60,73 +62,73 @@ pub fn parse_property(parser: &mut Parser, property: &str, element_style: &mut E
 		"border-width" => border_width,
 		"box-shadow" => box_shadow,
 		"filter" => filter,
-        _ => return Err(())
+        _ => return Err(ParseError::Custom(()))
     };
 
     f(parser, element_style)
 }
 
-fn color(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     element_style.font_color = parse_color(parser)?;
     Ok(())
 }
 
-fn opacity(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn opacity<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     element_style.opacity = parser.expect_number()?;
     Ok(())
 }
 
-fn overflow(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn overflow<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     let overflow = overflow_any(parser)?;
     element_style.overflow = overflow;
     Ok(())
 }
 
-fn overflow_x(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn overflow_x<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     element_style.overflow = overflow_any(parser)?;
     Ok(())
 }
 
-fn overflow_y(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn overflow_y<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     element_style.overflow = overflow_any(parser)?;
     Ok(())
 }
 
-fn overflow_any(parser: &mut Parser) -> Result<Overflow, ()> {
+fn overflow_any<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<Overflow, ParseError<'i, ()>> {
     let ident = parser.expect_ident()?;
 
     match_ignore_ascii_case! { ident.as_ref(),
         "visible" | "initial" => Ok(Overflow::Visible),
         "hidden" => Ok(Overflow::Hidden),
-        _ => Err(()),
+        _ => Err(ParseError::Custom(())),
     }
 }
 
-fn visibility(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn visibility<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     let ident = parser.expect_ident()?;
 
     match_ignore_ascii_case! { ident.as_ref(),
         "visible" | "initial" => element_style.visible = true,
         "hidden" => element_style.visible = false,
-        _ => return Err(()),
+        _ => return Err(ParseError::Custom(())),
     }
 
     Ok(())
 }
 
-fn background(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn background_attachment(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_attachment<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn background_blend_mode(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_blend_mode<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn background_color(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     let parsed_color = parse_color(parser)?;
     if let Some(image) = element_style.background_images.last_mut() {
         if let Some(BackgroundPicture::Color(ref mut color)) = image.image {
@@ -143,88 +145,88 @@ fn background_color(parser: &mut Parser, element_style: &mut ElementStyle) -> Re
     Ok(())
 }
 
-fn background_image(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_image<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn background_position(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_position<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn background_repeat(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_repeat<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn background_clip(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_clip<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn background_origin(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_origin<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn background_size(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_size<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn border(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn border_bottom(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_bottom<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn border_left(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_left<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn border_right(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_right<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn border_top(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_top<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn border_bottom_color(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_bottom_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_side_color(parser, element_style, border::BOTTOM)
 }
 
-fn border_left_color(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_left_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_side_color(parser, element_style, border::LEFT)
 }
 
-fn border_right_color(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_right_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_side_color(parser, element_style, border::RIGHT)
 }
 
-fn border_top_color(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_top_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_side_color(parser, element_style, border::TOP)
 }
 
-fn border_side_color(parser: &mut Parser, element_style: &mut ElementStyle, side: usize) -> Result<(), ()> {
+fn border_side_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle, side: usize) -> Result<(), ParseError<'i, ()>> {
     element_style.border[side].color = parse_color(parser)?;
     Ok(())
 }
 
-fn border_bottom_left_radius(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_bottom_left_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_corner_radius(parser, element_style, corner::BOTTOM_LEFT)
 }
 
-fn border_bottom_right_radius(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_bottom_right_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_corner_radius(parser, element_style, corner::BOTTOM_RIGHT)
 }
 
-fn border_top_left_radius(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_top_left_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_corner_radius(parser, element_style, corner::TOP_LEFT)
 }
 
-fn border_top_right_radius(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_top_right_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_corner_radius(parser, element_style, corner::TOP_RIGHT)
 }
 
-fn border_corner_radius(parser: &mut Parser, element_style: &mut ElementStyle, corner: usize) -> Result<(), ()> {
+fn border_corner_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle, corner: usize) -> Result<(), ParseError<'i, ()>> {
     if Ok(()) == parser.try(|parser| parser.expect_ident_matching("initial")) {
         element_style.border_radius[corner].x = LengthOrPercentage::Length(0.0);
         element_style.border_radius[corner].y = LengthOrPercentage::Length(0.0);
@@ -241,49 +243,49 @@ fn border_corner_radius(parser: &mut Parser, element_style: &mut ElementStyle, c
     Ok(())
 }
 
-fn border_bottom_style(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_bottom_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_side_style(parser, element_style, border::BOTTOM)
 }
 
-fn border_left_style(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_left_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_side_style(parser, element_style, border::LEFT)
 }
 
-fn border_top_style(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_top_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_side_style(parser, element_style, border::TOP)
 }
 
-fn border_right_style(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_right_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_side_style(parser, element_style, border::RIGHT)
 }
 
-fn border_side_style(parser: &mut Parser, element_style: &mut ElementStyle, border: usize) -> Result<(), ()> {
+fn border_side_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle, border: usize) -> Result<(), ParseError<'i, ()>> {
     element_style.border[border].style = parse_border_style(parser)?;
     Ok(())
 }
 
-fn border_bottom_width(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_bottom_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_side_width(parser, element_style, border::BOTTOM)
 }
 
-fn border_top_width(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_top_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_side_width(parser, element_style, border::TOP)
 }
 
-fn border_left_width(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_left_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_side_width(parser, element_style, border::LEFT)
 }
 
-fn border_right_width(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_right_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     border_side_width(parser, element_style, border::RIGHT)
 }
 
-fn border_side_width(parser: &mut Parser, element_style: &mut ElementStyle, border: usize) -> Result<(), ()> {
+fn border_side_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle, border: usize) -> Result<(), ParseError<'i, ()>> {
     element_style.border[border].width = parse_border_width(parser)?;
     Ok(())
 }
 
-fn border_color(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     if Ok(()) == parser.try(|parser| parser.expect_ident_matching("initial")) {
         for i in 0..4 {
             element_style.border[i].color = Color::black();
@@ -299,31 +301,31 @@ fn border_color(parser: &mut Parser, element_style: &mut ElementStyle) -> Result
     Ok(())
 }
 
-fn border_image(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_image<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn border_image_outset(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_image_outset<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn border_image_repeat(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_image_repeat<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn border_image_slice(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_image_slice<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn border_image_source(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_image_source<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn border_image_width(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_image_width<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     unimplemented!()
 }
 
-fn border_radius(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     if Ok(()) == parser.try(|parser| parser.expect_ident_matching("initial")) {
         for i in 0..4 {
             element_style.border_radius[i].x = LengthOrPercentage::Length(0.0);
@@ -341,7 +343,7 @@ fn border_radius(parser: &mut Parser, element_style: &mut ElementStyle) -> Resul
     Ok(())
 }
 
-fn border_style(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     if Ok(()) == parser.try(|parser| parser.expect_ident_matching("initial")) {
         for i in 0..4 {
             element_style.border[i].style = None;
@@ -357,7 +359,7 @@ fn border_style(parser: &mut Parser, element_style: &mut ElementStyle) -> Result
     Ok(())
 }
 
-fn border_width(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     if Ok(()) == parser.try(|parser| parser.expect_ident_matching("initial")) {
         for i in 0..4 {
             element_style.border[i].width = MEDIUM_BORDER;
@@ -373,7 +375,7 @@ fn border_width(parser: &mut Parser, element_style: &mut ElementStyle) -> Result
     Ok(())
 }
 
-fn box_shadow(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn box_shadow<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     element_style.box_shadows.clear();
 
     if Ok(()) == parser.try(|parser| parser.expect_ident_matching("none")) ||
@@ -389,7 +391,7 @@ fn box_shadow(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(
     Ok(())
 }
 
-fn filter(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn filter<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
     element_style.filters.clear();
 
     if Ok(()) == parser.try(|parser| parser.expect_ident_matching("none")) ||
@@ -405,7 +407,7 @@ fn filter(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), (
     Ok(())
 }
 
-fn parse_filter(parser: &mut Parser) -> Result<Filter, ()> {
+fn parse_filter<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<Filter, ParseError<'i, ()>> {
     let function = parser.expect_function()?;
 
     Ok(match_ignore_ascii_case! { function.as_ref(),
@@ -419,18 +421,18 @@ fn parse_filter(parser: &mut Parser) -> Result<Filter, ()> {
         "opacity" => Filter::Invert(parse_number_or_percentage(parser)?),
         "sepia" => Filter::Invert(parse_number_or_percentage(parser)?),
         "saturate" => Filter::Invert(parse_number_or_percentage(parser)?),
-        _ => return Err(()),
+        _ => return Err(ParseError::Custom(())),
     })
 }
 
-fn parse_color(parser: &mut Parser) -> Result<Color, ()> {
+fn parse_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<Color, ParseError<'i, ()>> {
     match cssparser::Color::parse(parser)? {
         cssparser::Color::RGBA(rgba) => Ok(Color::from_rgba32(rgba.red, rgba.green, rgba.blue, rgba.alpha)),
-        cssparser::Color::CurrentColor => Err(()),
+        cssparser::Color::CurrentColor => Err(ParseError::Custom(())),
     }
 }
 
-fn parse_shadow(parser: &mut Parser) -> Result<Shadow, ()> {
+fn parse_shadow<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<Shadow, ParseError<'i, ()>> {
     let mut color: Option<Color> = None;
     let mut inset: bool = false;
 
@@ -441,18 +443,18 @@ fn parse_shadow(parser: &mut Parser) -> Result<Shadow, ()> {
     while !parser.is_exhausted() {
         if Ok(()) == parser.try(|parser| parser.expect_ident_matching("inset")) {
             if inset {
-                return Err(());
+                return Err(ParseError::Custom(()));
             }
 
             inset = true;
         } else if let Ok(parsed_color) = parser.try(parse_color) {
             if color.is_some() {
-                return Err(());
+                return Err(ParseError::Custom(()));
             }
             color = Some(parsed_color);
         } else if let Ok(h_shadow) = parser.try(parse_length) {
             if position.is_some() {
-                return Err(());
+                return Err(ParseError::Custom(()));
             }
 
             let v_shadow = parse_length(parser)?;
@@ -462,7 +464,7 @@ fn parse_shadow(parser: &mut Parser) -> Result<Shadow, ()> {
 
             position = Some(Vec2::new(h_shadow, v_shadow));
         } else {
-            return Err(());
+            return Err(ParseError::Custom(()));
         }
     }
 
@@ -475,12 +477,12 @@ fn parse_shadow(parser: &mut Parser) -> Result<Shadow, ()> {
             spread,
         })
     } else {
-        return Err(());
+        return Err(ParseError::Custom(()));
     }
 
 }
 
-fn parse_border_style(parser: &mut Parser) -> Result<Option<BorderStyle>, ()> {
+fn parse_border_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<Option<BorderStyle>, ParseError<'i, ()>> {
     let ident = parser.expect_ident()?;
 
     Ok(match_ignore_ascii_case! { ident.as_ref(),
@@ -493,24 +495,24 @@ fn parse_border_style(parser: &mut Parser) -> Result<Option<BorderStyle>, ()> {
          "ridge" => Some(BorderStyle::Ridge),
          "inset" => Some(BorderStyle::Inset),
          "outset" => Some(BorderStyle::Outset),
-        _ => return Err(()),
+        _ => return Err(ParseError::Custom(())),
     })
 }
 
-fn parse_border_width(parser: &mut Parser) -> Result<f32, ()> {
+fn parse_border_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<f32, ParseError<'i, ()>> {
     if let Ok(ident) = parser.try(|parser| parser.expect_ident()) {
         Ok(match_ignore_ascii_case! { ident.as_ref(),
             "thin" => THIN_BORDER,
             "medium" | "initial" => MEDIUM_BORDER,
             "thick" => THICK_BORDER,
-            _ => return Err(()),
+            _ => return Err(ParseError::Custom(())),
         })
     } else {
         parse_length(parser)
     }
 }
 
-fn parse_length_or_percentage(parser: &mut Parser) -> Result<LengthOrPercentage, ()> {
+fn parse_length_or_percentage<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<LengthOrPercentage, ParseError<'i, ()>> {
     if let Ok(length) = parser.try(parse_length) {
         Ok(LengthOrPercentage::Length(length))
     } else {
@@ -518,7 +520,7 @@ fn parse_length_or_percentage(parser: &mut Parser) -> Result<LengthOrPercentage,
     }
 }
 
-fn parse_number_or_percentage(parser: &mut Parser) -> Result<f32, ()> {
+fn parse_number_or_percentage<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<f32, ParseError<'i, ()>> {
     if let Ok(number) = parser.try(|parser| parser.expect_number()) {
         Ok(number)
     } else {
@@ -526,7 +528,7 @@ fn parse_number_or_percentage(parser: &mut Parser) -> Result<f32, ()> {
     }
 }
 
-fn parse_length(parser: &mut Parser) -> Result<f32, ()> {
+fn parse_length<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<f32, ParseError<'i, ()>> {
     if let Token::Dimension(value, unit) = parser.next()? {
         Ok(value.value * match_ignore_ascii_case! { unit.as_ref(),
             "px" => 1.0,
@@ -536,30 +538,30 @@ fn parse_length(parser: &mut Parser) -> Result<f32, ()> {
             "in" => 96.0,
             "pc" => 96.0/6.0,
             "pt" => 96.0/72.0,
-            _ => return Err(())
+            _ => return Err(ParseError::Custom(()))
         })
     } else {
-        Err(())
+        Err(ParseError::Custom(()))
     }
 }
 
-fn parse_angle(parser: &mut Parser) -> Result<f32, ()> {
+fn parse_angle<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<f32, ParseError<'i, ()>> {
     if let Token::Dimension(value, unit) = parser.next()? {
         Ok(value.value * match_ignore_ascii_case! { unit.as_ref(),
             "deg" => 1.0,
             "grad" => 360.0/400.0,
             "rad" => 360.0/(2.0*std::f32::consts::PI),
             "turn" => 360.0,
-            _ => return Err(())
+            _ => return Err(ParseError::Custom(()))
         })
     } else {
-        Err(())
+        Err(ParseError::Custom(()))
     }
 }
 
-fn parse_four_values<F, R>(parser: &mut Parser, f: F) -> Result<[R; 4], ()>
+fn parse_four_values<'i, 'tt, F, R>(parser: &mut Parser<'i, 'tt>, f: F) -> Result<[R; 4], ParseError<'i, ()>>
   where
-    F: Copy + Fn(&mut Parser) -> Result<R, ()>,
+    F: Copy + for<'tt2> Fn(&mut Parser<'i, 'tt2>) -> Result<R, ParseError<'i, ()>>,
     R: Copy
 {
     let value1 = f(parser)?;
@@ -588,7 +590,7 @@ fn test_angles() {
         ("1rad",      57.295776),
         ("1grad",      0.9)]
     {
-        assert_eq!(parse_angle(&mut Parser::new(a)).unwrap(), b);
+        assert_eq!(parse_angle(&mut Parser::new(&mut ParserInput::new(a))).unwrap(), b);
     }
 }
 
@@ -603,10 +605,10 @@ fn test_lengths() {
         ("1in",    "6pc"),
     ]
     {
-        assert_eq!(parse_length(&mut Parser::new(a)).unwrap(), parse_length(&mut Parser::new(b)).unwrap());
+        assert_eq!(parse_length(&mut Parser::new(&mut ParserInput::new(a))).unwrap(), parse_length(&mut Parser::new(&mut ParserInput::new(b))).unwrap());
     }
 
-    assert_eq!(parse_length(&mut Parser::new("100px")).unwrap(), 100.0);
+    assert_eq!(parse_length(&mut Parser::new(&mut ParserInput::new("100px"))).unwrap(), 100.0);
     
     for &(a, b) in &[
         ("1px",   LengthOrPercentage::Length(1.0)),
@@ -614,7 +616,7 @@ fn test_lengths() {
         ("50.5%", LengthOrPercentage::Percentage(0.505)),
     ]
     {
-        assert_eq!(parse_length_or_percentage(&mut Parser::new(a)).unwrap(), b);
+        assert_eq!(parse_length_or_percentage(&mut Parser::new(&mut ParserInput::new(a))).unwrap(), b);
     }
 
     for &(a, b) in &[
@@ -623,7 +625,7 @@ fn test_lengths() {
         ("50.5%", 0.505),
     ]
     {
-        assert_eq!(parse_number_or_percentage(&mut Parser::new(a)).unwrap(), b);
+        assert_eq!(parse_number_or_percentage(&mut Parser::new(&mut ParserInput::new(a))).unwrap(), b);
     }
 }
 
@@ -636,7 +638,7 @@ fn test_four_values() {
         ("1 2 3 4", [1.0, 2.0, 3.0, 4.0]),
     ]
     {
-        assert_eq!(parse_four_values(&mut Parser::new(a), parse_number_or_percentage).unwrap(), b);
+        assert_eq!(parse_four_values(&mut Parser::new(&mut ParserInput::new(a)), parse_number_or_percentage).unwrap(), b);
     }
 }
 
@@ -649,7 +651,7 @@ fn test_border_width() {
         ("medium",  MEDIUM_BORDER),
     ]
     {
-        assert_eq!(parse_border_width(&mut Parser::new(a)).unwrap(), b);
+        assert_eq!(parse_border_width(&mut Parser::new(&mut ParserInput::new(a))).unwrap(), b);
     }
 }
 
@@ -661,7 +663,7 @@ fn test_shadow() {
         ("10px 5px 5px 1.5px black", Shadow { color: Color::black(),                 position: Vec2::new(10.0,   5.0), inset: false, blur: 5.0, spread: 1.5 }),
     ]
     {
-        assert_eq!(parse_shadow(&mut Parser::new(a)).unwrap(), b);
+        assert_eq!(parse_shadow(&mut Parser::new(&mut ParserInput::new(a))).unwrap(), b);
     }
 }
 
@@ -673,6 +675,6 @@ fn test_color() {
         ("rgb(178, 81, 25)", Color::from_rgb24(178, 81, 25)),
     ]
     {
-        assert_eq!(parse_color(&mut Parser::new(a)).unwrap(), b);
+        assert_eq!(parse_color(&mut Parser::new(&mut ParserInput::new(a))).unwrap(), b);
     }
 }

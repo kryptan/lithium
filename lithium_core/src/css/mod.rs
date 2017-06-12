@@ -2,7 +2,7 @@ mod properties;
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use cssparser::{Parser, Token, Delimiter};
+use cssparser::{Parser, ParserInput, ParseError, Token, Delimiter};
 use {Theme, Color};
 use theme::{ColorId, ElementKind, StyleVariant, ElementStyle, style_variant, element_kind};
 
@@ -31,8 +31,9 @@ impl Selector {
     }
 }
 
-pub fn parse_theme(input: &str) -> Result<Theme, ()> {
-    let mut parser = Parser::new(input);
+pub fn parse_theme(input: &str) -> Result<Theme, ParseError<()>> {
+    let mut parser_input = ParserInput::new(input);
+    let mut parser = Parser::new(&mut parser_input);
 
     let mut styles: Vec<(Selector, &str)> = Vec::new();
 
@@ -42,7 +43,7 @@ pub fn parse_theme(input: &str) -> Result<Theme, ()> {
         } else {
             let selectors = parser.parse_until_before(Delimiter::CurlyBracketBlock, parse_selectors)?;
             if parser.next() != Ok(Token::CurlyBracketBlock) {
-                return Err(());
+                return Err(ParseError::Custom(()));
             }
 
             let start_position = parser.position();
@@ -92,8 +93,9 @@ pub fn parse_theme(input: &str) -> Result<Theme, ()> {
     Ok(theme)
 }
 
-pub fn parse_element_style(input: &str, element_style: &mut ElementStyle) -> Result<(), ()> {
-    let mut parser = Parser::new(input);
+pub fn parse_element_style<'a>(input: &'a str, element_style: &mut ElementStyle) -> Result<(), ParseError<'a, ()>> {
+    let mut parser_input = ParserInput::new(input);
+    let mut parser = Parser::new(&mut parser_input);
 
     while !parser.is_exhausted() {
         parser.parse_until_after(Delimiter::Semicolon, |parser| {
@@ -107,18 +109,18 @@ pub fn parse_element_style(input: &str, element_style: &mut ElementStyle) -> Res
     Ok(())
 }
 
-fn parse_hash_selector(parser: &mut Parser, expected_id: &str) -> Result<(), ()>{
+fn parse_hash_selector<'i, 'tt>(parser: &mut Parser<'i, 'tt>, expected_id: &str) -> Result<(), ParseError<'i, ()>>{
     match parser.next()? {
         Token::IDHash(ref actual_id) if actual_id == expected_id => Ok(()),
-        _ => Err(())
+        _ => Err(ParseError::Custom(()))
     }
 }
 
-fn parse_selectors(parser: &mut Parser) -> Result<Vec<Selector>, ()> {
+fn parse_selectors<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<Vec<Selector>, ParseError<'i, ()>> {
     parser.parse_comma_separated(parse_selector)
 }
 
-fn parse_selector(parser: &mut Parser) -> Result<Selector, ()> {
+fn parse_selector<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<Selector, ParseError<'i, ()>> {
     let kind = if let Ok(id) = parser.try(|parser| parser.expect_ident()) {
         Some(element_kind(&id))
     } else {
@@ -137,19 +139,19 @@ fn parse_selector(parser: &mut Parser) -> Result<Selector, ()> {
         (Some(kind), None               ) => Ok(Selector::ElementKind(kind)),
         (None,       Some(style_variant)) => Ok(Selector::StyleVariant(style_variant)),
 
-        (None, None) => Err(()),
+        (None, None) => Err(ParseError::Custom(())),
     }
 }
 
 #[test]
 fn test_parse_selectors() {
-    assert_eq!(parse_selector(&mut Parser::new("Test")).unwrap(), Selector::ElementKind(element_kind("Test")));
-    assert_eq!(parse_selector(&mut Parser::new("Test.style")).unwrap(), Selector::Full(style_variant("style"), element_kind("Test")));
-    assert_eq!(parse_selector(&mut Parser::new(" Test . style ")).unwrap(), Selector::Full(style_variant("style"), element_kind("Test")));
-    assert_eq!(parse_selector(&mut Parser::new(".style")).unwrap(), Selector::StyleVariant(style_variant("style")));
+    assert_eq!(parse_selector(&mut Parser::new(&mut ParserInput::new("Test"))).unwrap(), Selector::ElementKind(element_kind("Test")));
+    assert_eq!(parse_selector(&mut Parser::new(&mut ParserInput::new("Test.style"))).unwrap(), Selector::Full(style_variant("style"), element_kind("Test")));
+    assert_eq!(parse_selector(&mut Parser::new(&mut ParserInput::new(" Test . style "))).unwrap(), Selector::Full(style_variant("style"), element_kind("Test")));
+    assert_eq!(parse_selector(&mut Parser::new(&mut ParserInput::new(".style"))).unwrap(), Selector::StyleVariant(style_variant("style")));
 
     assert_eq!(parse_selectors(
-        &mut Parser::new("Test.style, Chunga.changa, Button")).unwrap(),
+        &mut Parser::new(&mut ParserInput::new("Test.style, Chunga.changa, Button"))).unwrap(),
         vec![
             Selector::Full(style_variant("style"), element_kind("Test")),
             Selector::Full(style_variant("changa"), element_kind("Chunga")),
@@ -157,8 +159,8 @@ fn test_parse_selectors() {
         ]
     );
 
-    assert_eq!(parse_hash_selector(&mut Parser::new("#theme"), "theme"), Ok(()));
-    assert_eq!(parse_hash_selector(&mut Parser::new("#theme"), "theme2"), Err(()));
+    assert_eq!(parse_hash_selector(&mut Parser::new(&mut ParserInput::new("#theme")), "theme"), Ok(()));
+    assert!(parse_hash_selector(&mut Parser::new(&mut ParserInput::new("#theme")), "theme2").is_err());
 }
 
 #[test]
