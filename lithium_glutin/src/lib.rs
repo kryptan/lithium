@@ -38,6 +38,7 @@ fn window_thread<W: Widget>(mut widget: W, theme: Theme, window_builder: glutin:
         .build(&event_loop)
         .unwrap();
 
+    // This function (`window_thread`) is not exported and we execute it only from a new thread.
     unsafe {
         window.make_current().ok();
     }
@@ -163,16 +164,15 @@ fn render(gui: &lithium_core::Gui, pipeline_id: PipelineId, (width, height): (u3
 /// Example:
 ///
 /// ```ignore
-/// show_window("Example Window", theme, |window| {
+/// spawn_window("Example Window", theme, |window| {
 ///     window.show(lithium_core::widgets::ClickArea::new());
 ///     // Instead of `lithium_core::widgets::ClickArea` you would probably want to use a custom widget defined by you.
 /// }).join().unwrap();
 /// ```
-pub fn spawn_window<S, F, W, R>(title: S, theme: Theme, f: F) -> thread::JoinHandle<R>
+pub fn spawn_window<S, F, R>(title: S, theme: Theme, f: F) -> thread::JoinHandle<R>
   where
     S: Into<String>,
-    F: Send + 'static + FnOnce(Window<W>) -> R,
-    W: Widget,
+    F: Send + 'static + FnOnce(Window) -> R,
     R: Send + 'static,
 {
     let title = title.into();
@@ -183,10 +183,9 @@ pub fn spawn_window<S, F, W, R>(title: S, theme: Theme, f: F) -> thread::JoinHan
 /// Similar to `spawn_window` but allows more configuration with `glutin::WindowBuilder`.
 ///
 /// See description of `spawn_window` for more info.
-pub fn spawn_window_with_builder<F, W, R>(window_builder: glutin::WindowBuilder<'static>, theme: Theme, f: F) -> thread::JoinHandle<R>
+pub fn spawn_window_with_builder<F, R>(window_builder: glutin::WindowBuilder<'static>, theme: Theme, f: F) -> thread::JoinHandle<R>
   where
-    F: Send + 'static + FnOnce(Window<W>) -> R,
-    W: Widget,
+    F: Send + 'static + FnOnce(Window) -> R,
     R: Send + 'static,
 {
     let thread_builder = thread::Builder::new().name("Lithium Window".to_owned());
@@ -195,7 +194,6 @@ pub fn spawn_window_with_builder<F, W, R>(window_builder: glutin::WindowBuilder<
         let window = Window {
             theme,
             window_builder: window_builder,
-            _marker: std::marker::PhantomData::<W>,
         };
 
         f(window)
@@ -203,30 +201,14 @@ pub fn spawn_window_with_builder<F, W, R>(window_builder: glutin::WindowBuilder<
 }
 
 /// Type passed to the closure passed to the `spawn_window`.
-pub struct Window<W> {
+pub struct Window {
     theme: Theme,
     window_builder: glutin::WindowBuilder<'static>,
-    _marker: std::marker::PhantomData<W>,
 }
 
-impl<W: Widget> Window<W> {
+impl Window {
     /// Show window with the supplied widget and wait until it is closed.
-    pub fn show(self, widget: W) {
+    pub fn show<W: Widget>(self, widget: W) {
         window_thread(widget, self.theme, self.window_builder)
     }
 }
-
-/* FIXME: use this implementation when it works on stable:
-
-#![feature(fn_traits)]
-#![feature(unboxed_closures)]
-
-impl<W: Widget> FnOnce<(W,)> for Window<W> {
-    type Output = ();
-
-    extern "rust-call" fn call_once(self, widget: (W,)) -> Self::Output {
-        window_thread(self.title, widget.0, self.theme)
-    }
-}
-
-*/

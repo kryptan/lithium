@@ -1,17 +1,10 @@
-extern crate lithium_core;
-#[macro_use] extern crate cssparser;
-extern crate blake2_rfc;
-
-mod identifiers;
 mod properties;
 
 use std::collections::HashMap;
 use std::sync::Arc;
 use cssparser::{Parser, Token, Delimiter};
-use lithium_core::{Theme, Color};
-use lithium_core::theme::{ColorId, ElementKind, StyleVariant, ElementStyle};
-
-pub use identifiers::{color_id, element_kind, style_variant};
+use {Theme, Color};
+use theme::{ColorId, ElementKind, StyleVariant, ElementStyle, style_variant, element_kind};
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 enum Selector {
@@ -72,7 +65,7 @@ pub fn parse_theme(input: &str) -> Result<Theme, ()> {
     // Stable sort by increasing specificity.
     styles.sort_by_key(|&(selector, _)| selector.specificity());
 
-    let mut colors: HashMap<(StyleVariant, ColorId), Color> = HashMap::new();
+    let /*mut*/ _colors: HashMap<(StyleVariant, ColorId), Color> = HashMap::new();
     let mut element_styles: HashMap<(StyleVariant, ElementKind), ElementStyle> = HashMap::new();
 
     for &(selector, _) in &styles {

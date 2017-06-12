@@ -2,24 +2,21 @@
 #[macro_export]
 macro_rules! color_id {
     ($e:expr) => {
-        // FIXME: hash string
-        $crate::theme::ColorId(0)
+        $crate::theme::color_id($e)
     }
 }
 
 #[macro_export]
 macro_rules! element_kind {
     ($e:expr) => {
-        // FIXME: hash string
-        $crate::theme::ElementKind(0)
+        $crate::theme::element_kind($e)
     }
 }
 
 #[macro_export]
 macro_rules! style_variant {
     ($e:expr) => {
-        // FIXME: hash string
-        $crate::theme::StyleVariant(0)
+        $crate::theme::style_variant($e)
     }
 }
 

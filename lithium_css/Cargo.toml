@@ -1,9 +1,0 @@
-[package]
-name = "lithium_css"
-version = "0.1.0"
-authors = ["kryptan"]
-
-[dependencies]
-lithium_core = { path = "../lithium_core" }
-cssparser = "0.13.1"
-blake2-rfc = "0.2.17"

@@ -4,7 +4,9 @@ use util::IdIdentityHasherBuilder;
 use Color;
 
 pub use self::element_style::ElementStyle;
+pub use self::identifiers::{color_id, element_kind, style_variant};
 
+mod identifiers;
 pub mod element_style;
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]

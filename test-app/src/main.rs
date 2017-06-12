@@ -1,7 +1,7 @@
 extern crate lithium_core;
 extern crate lithium_glutin;
 
-use lithium_core::gui::scene::Theme;
+use lithium_core::Theme;
 
 fn main() {
     let theme = Theme::empty();

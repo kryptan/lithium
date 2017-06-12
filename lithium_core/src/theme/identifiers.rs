@@ -1,22 +1,22 @@
-use lithium_core::theme::{ColorId, ElementKind, StyleVariant, ElementStyle};
 use blake2_rfc::blake2b::blake2b;
+use super::{ColorId, ElementKind, StyleVariant};
 
 /// Generate color identifier from the string.
-pub fn color_id(text: &str) -> ColorId {
+/*FIXME: const*/ pub fn color_id(text: &str) -> ColorId {
     ColorId(hash("color_id", text))
 }
 
 /// Generate element kind identifier from the string.
-pub fn element_kind(text: &str) -> ElementKind {
+/*FIXME: const*/ pub fn element_kind(text: &str) -> ElementKind {
     ElementKind(hash("element_kind", text))
 }
 
 /// Generate style variant identifier from the string.
-pub fn style_variant(text: &str) -> StyleVariant {
+/*FIXME: const*/ pub fn style_variant(text: &str) -> StyleVariant {
     StyleVariant(hash("style_variant", text))
 }
 
-fn hash(key: &str, text: &str) -> u64 {
+/*FIXME: const*/ fn hash(key: &str, text: &str) -> u64 {
     let result = blake2b(8, key.as_bytes(), text.as_bytes());
     let bytes = result.as_bytes();
 
@@ -30,7 +30,7 @@ fn hash(key: &str, text: &str) -> u64 {
     ((bytes[7] as u64) << 56)
 }
 
-// Check that identifiers are always generated in the same way.
+// Check that identifiers are always generated in the same way in all the future versions.
 #[test]
 fn ids_stay_the_same() {
     assert_eq!(color_id("test"), ColorId(15669914510866457799));

@@ -1,9 +1,9 @@
 use std;
 use cssparser;
 use cssparser::{Parser, Token};
-use lithium_core::{Color, Vec2};
-use lithium_core::theme::ElementStyle;
-use lithium_core::theme::element_style::{Overflow, BorderStyle, BackgroundPicture, BackgroundImage, LengthOrPercentage, Filter, Shadow, border, corner};
+use {Color, Vec2};
+use theme::ElementStyle;
+use theme::element_style::{Overflow, BorderStyle, BackgroundPicture, BackgroundImage, LengthOrPercentage, Filter, Shadow, border, corner};
 
 const THIN_BORDER: f32 = 1.0;
 const MEDIUM_BORDER: f32 = 2.0;
@@ -114,15 +114,15 @@ fn visibility(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(
     Ok(())
 }
 
-fn background(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn background_attachment(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_attachment(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn background_blend_mode(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_blend_mode(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
@@ -143,47 +143,47 @@ fn background_color(parser: &mut Parser, element_style: &mut ElementStyle) -> Re
     Ok(())
 }
 
-fn background_image(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_image(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn background_position(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_position(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn background_repeat(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_repeat(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn background_clip(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_clip(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn background_origin(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_origin(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn background_size(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn background_size(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn border(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn border_bottom(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_bottom(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn border_left(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_left(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn border_right(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_right(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn border_top(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_top(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
@@ -299,27 +299,27 @@ fn border_color(parser: &mut Parser, element_style: &mut ElementStyle) -> Result
     Ok(())
 }
 
-fn border_image(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_image(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn border_image_outset(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_image_outset(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn border_image_repeat(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_image_repeat(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn border_image_slice(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_image_slice(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn border_image_source(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_image_source(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
-fn border_image_width(parser: &mut Parser, element_style: &mut ElementStyle) -> Result<(), ()> {
+fn border_image_width(_parser: &mut Parser, _element_style: &mut ElementStyle) -> Result<(), ()> {
     unimplemented!()
 }
 
