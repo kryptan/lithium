@@ -37,7 +37,7 @@ pub struct Image {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct BackgroundImage {
-    pub image: Option<BackgroundPicture>,
+    pub image: BackgroundPicture,
     pub attachment: BackgroundAttachment,
     pub blend_mode: BackgroundBlendMode,
     pub clip: BackgroundBox,
@@ -276,7 +276,7 @@ impl Default for Outline {
 impl Default for BackgroundImage {
     fn default() -> Self {
         BackgroundImage {
-            image: None,
+            image: BackgroundPicture::Color(Color::transparent()),
             attachment: BackgroundAttachment::default(),
             blend_mode: BackgroundBlendMode::default(),
             clip: BackgroundBox::default(),

@@ -121,8 +121,9 @@ fn process_events(gui: &mut lithium_core::Gui, event_loop: &glutin::EventsLoop, 
 }
 
 fn render(gui: &lithium_core::Gui, pipeline_id: PipelineId, (width, height): (u32, u32), epoch: Epoch, api: &RenderApi) {
-    let mut builder = webrender_traits::DisplayListBuilder::new(pipeline_id);
-    let bounds = LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(width as f32, height as f32));
+    let layout_size = LayoutSize::new(width as f32, height as f32);
+    let mut builder = webrender_traits::DisplayListBuilder::new(pipeline_id, layout_size);
+    let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
     builder.push_stacking_context(
         webrender_traits::ScrollPolicy::Fixed,
         bounds,

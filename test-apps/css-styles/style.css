@@ -1,0 +1,48 @@
+.background-solid {
+	background: yellow;
+}
+
+.background-linear0 {
+	background: linear-gradient(to left top, blue, red);
+	border: dashed red 3px;
+	border-radius: 15px;
+}
+
+.background-linear1 {
+	background: linear-gradient(17deg, green, purple);
+	border: double red 3px;
+	border-radius: 15px;
+}
+
+.background-linear2 {
+	background: linear-gradient(117deg, blue, white 20%, black 90px, red);
+	border: groove red 3px;
+	border-radius: 15px;
+} 
+
+.background-radial0 {
+	background: radial-gradient(ellipse farthest-corner at 45px 45px, #00FFFF 0%, rgba(0, 0, 255, 0) 50%, #0000FF 95%);
+	border: ridge red 3px;
+	border-radius: 15px;
+}
+
+.background-radial1 {
+	background-image: radial-gradient(16px at 60px 50%, #000000 0%, #000000 14px, rgba(0, 0, 0, 0.3) 18px, rgba(0, 0, 0, 0.6) 19px); 
+	border: dotted red 3px;
+	border-radius: 15px;
+}
+
+.border0 {
+	background: linear-gradient(to right top, blue, black);
+	border: solid red 3px;
+	border-radius: 15px;
+}
+
+Dummy.background-solid,
+Dummy.background-linear0,
+Dummy.background-linear1,
+Dummy.background-linear2,
+Dummy.background-radial0,
+Dummy.background-radial1,
+Dummy.border0
+{}

@@ -1,9 +1,13 @@
 mod properties;
+mod border;
+mod background;
 
 use std::collections::HashMap;
 use std::sync::Arc;
+use cssparser;
 use cssparser::{Parser, ParserInput, ParseError, Token, Delimiter};
 use {Theme, Color};
+use theme::element_style::LengthOrPercentage;
 use theme::{ColorId, ElementKind, StyleVariant, ElementStyle, style_variant, element_kind};
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
@@ -143,6 +147,38 @@ fn parse_selector<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<Selector, Par
     }
 }
 
+fn parse_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<Color, ParseError<'i, ()>> {
+    match cssparser::Color::parse(parser)? {
+        cssparser::Color::RGBA(rgba) => Ok(Color::from_rgba32(rgba.red, rgba.green, rgba.blue, rgba.alpha)),
+        cssparser::Color::CurrentColor => Err(ParseError::Custom(())),
+    }
+}
+
+fn parse_length_or_percentage<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<LengthOrPercentage, ParseError<'i, ()>> {
+    if let Ok(length) = parser.try(parse_length) {
+        Ok(LengthOrPercentage::Length(length))
+    } else {
+        Ok(LengthOrPercentage::Percentage(parser.expect_percentage()?))
+    }
+}
+
+fn parse_length<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<f32, ParseError<'i, ()>> {
+    if let Token::Dimension(value, unit) = parser.next()? {
+        Ok(value.value * match_ignore_ascii_case! { unit.as_ref(),
+            "px" => 1.0,
+            "cm" => 96.0/2.54,
+            "mm" => 96.0*0.1/2.54,
+            "q" => 96.0*0.25/2.54,
+            "in" => 96.0,
+            "pc" => 96.0/6.0,
+            "pt" => 96.0/72.0,
+            _ => return Err(ParseError::Custom(()))
+        })
+    } else {
+        Err(ParseError::Custom(()))
+    }
+}
+
 #[test]
 fn test_parse_selectors() {
     assert_eq!(parse_selector(&mut Parser::new(&mut ParserInput::new("Test"))).unwrap(), Selector::ElementKind(element_kind("Test")));
@@ -208,4 +244,16 @@ fn test_parse_theme() {
     assert_eq!(theme.element_style(style_variant("default"), element_kind("OtherWidget")).unwrap().border[0].width, 7.0);
     assert_eq!(theme.element_style(style_variant("error"),   element_kind("OtherWidget")).unwrap().border[0].width, 7.0);
 
+}
+
+#[test]
+fn test_color() {
+    for &(a, b) in &[
+        ("olive",   Color::from_css_hex(b"808000")),
+        ("#123456", Color::from_css_hex(b"123456")),
+        ("rgb(178, 81, 25)", Color::from_rgb24(178, 81, 25)),
+    ]
+    {
+        assert_eq!(parse_color(&mut Parser::new(&mut ParserInput::new(a))).unwrap(), b);
+    }
 }

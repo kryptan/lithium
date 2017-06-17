@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use util::IdIdentityHasherBuilder;
+use css;
 use Color;
 
 pub use self::element_style::ElementStyle;
@@ -30,6 +31,10 @@ impl Theme {
             colors: HashMap::with_hasher(IdIdentityHasherBuilder),
             element_styles: HashMap::with_hasher(IdIdentityHasherBuilder),
         }
+    }
+
+    pub fn from_css_str(css: &str) -> Self {
+        css::parse_theme(css).unwrap()
     }
 
     pub fn color(&self, style_variant: StyleVariant, id: ColorId) -> Option<Color> {

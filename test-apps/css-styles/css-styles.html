@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Lithium CSS Styles</title>
+		
+		<link rel="stylesheet" href="style.css">
+
+		<style>
+			div {
+				width: 160px;
+				height: 90px;
+				margin: 10px;
+				display: inline-block;
+			}
+		</style>
+
+		<script>
+			window.onload = function() {
+				let rules = document.styleSheets[0].cssRules
+				for (var i = 0; i < rules.length; i++) {
+					if (rules[i].selectorText.startsWith('.')) {
+						var div = document.createElement('div')
+						div.className = rules[i].selectorText.split('.').join('')
+						document.body.appendChild(div)
+					}
+				}
+			}
+		</script>
+	</head>
+	<body>
+	</body>
+</html>
