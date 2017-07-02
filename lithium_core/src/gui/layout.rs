@@ -45,6 +45,7 @@ impl Layout {
 
             match compare_constraints(previous_constraint, &self.previous_constraints.terms, new_constraint, &self.new_constraints.terms) {
                 Ordering::Equal => {
+                    new_constraint.tag = previous_constraint.tag;
                     previous_i += 1;
                     new_i += 1;
                 }
@@ -174,6 +175,6 @@ fn compare_constraints(a: &ConstraintInfo, a_terms: &[Term], b: &ConstraintInfo,
             }
         }
 
-        return Ordering::Equal;
+        Ordering::Equal
     })
 }

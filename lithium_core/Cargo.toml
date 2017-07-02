@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["kryptan"]
 
 [dependencies]
-num-traits = "0.1.37"
+num-traits = "0.1.39"
 rand = "0.3.15"
-cssparser = "0.14.0"
+cssparser = "0.16.1"
 blake2-rfc = "0.2.17"

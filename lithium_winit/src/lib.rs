@@ -6,11 +6,11 @@ use lithium_core::gui::input::{MouseButton, Key};
 use lithium_core::gui::input::{Event, TouchEvent, TouchPhase};
 
 pub fn winit_event_to_lithium(event: &winit::WindowEvent, scale: f64) -> Option<Event> {
-    match event {
-        &winit::WindowEvent::MouseEntered => Some(Event::MouseEntered),
-        &winit::WindowEvent::MouseLeft => Some(Event::MouseLeft),
-        &winit::WindowEvent::MouseMoved(x, y) => Some(Event::MouseMoved(Vec2::new(x as f64, y as f64) * (1.0 / scale))),
-        &winit::WindowEvent::MouseInput(state, button) => {
+    match *event {
+        winit::WindowEvent::MouseEntered => Some(Event::MouseEntered),
+        winit::WindowEvent::MouseLeft => Some(Event::MouseLeft),
+        winit::WindowEvent::MouseMoved(x, y) => Some(Event::MouseMoved(Vec2::new(x as f64, y as f64) * (1.0 / scale))),
+        winit::WindowEvent::MouseInput(state, button) => {
             let button = match button {
                 winit::MouseButton::Left => MouseButton::Primary,
                 winit::MouseButton::Right => MouseButton::Secondary,
@@ -22,12 +22,12 @@ pub fn winit_event_to_lithium(event: &winit::WindowEvent, scale: f64) -> Option<
 
             Some(Event::MouseButton(button, state == winit::ElementState::Pressed))
         }
-        &winit::WindowEvent::KeyboardInput(state, _scancode, Some(key), _modfiers) => {
+        winit::WindowEvent::KeyboardInput(state, _scancode, Some(key), _modfiers) => {
             let key = winit_key_to_lithium(key);
 
             Some(Event::Key(key, state == winit::ElementState::Pressed))
         }
-        &winit::WindowEvent::Touch(touch) => {
+        winit::WindowEvent::Touch(touch) => {
             Some(Event::Touch(TouchEvent {
                 phase: match touch.phase {
                     winit::TouchPhase::Started   => TouchPhase::Started,

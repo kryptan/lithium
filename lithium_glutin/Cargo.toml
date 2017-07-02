@@ -15,5 +15,5 @@ git = "https://github.com/servo/webrender"
 features = ["freetype-lib"]
 default-features = false
 
-[dependencies.webrender_traits]
+[dependencies.webrender_api]
 git = "https://github.com/servo/webrender"

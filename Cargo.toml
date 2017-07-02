@@ -4,6 +4,5 @@ members = [
     "lithium_glutin",
     "lithium_webrender",
     "lithium_winit",
-    "test-app",
     "test-apps/css-styles",
 ]

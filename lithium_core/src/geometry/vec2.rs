@@ -20,7 +20,7 @@ impl<T> Vec2<T> {
         }
     }
 
-    pub fn as_array(self) -> [T; 2] {
+    pub fn into_array(self) -> [T; 2] {
         [self.x, self.y]
     }
 }
@@ -63,6 +63,14 @@ impl<T> Vec2<T>
 impl<T: Float> Vec2<T> {
     pub fn norm(self) -> T {
         self.norm_squared().sqrt()
+    }
+
+    pub fn from_angle(a: T) -> Self {
+        Vec2::new(a.cos(), a.sin())
+    }
+
+    pub fn normalize(self) -> Self {
+        self/self.norm()
     }
 }
 

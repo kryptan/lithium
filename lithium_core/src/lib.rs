@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "cargo-clippy", allow(or_fun_call, new_without_default))]
+
 extern crate num_traits;
 extern crate rand;
 #[macro_use] extern crate cssparser;

@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![cfg_attr(feature = "cargo-clippy", allow(doc_markdown))]
 
 /// Color with alpha channel.
 ///
@@ -259,6 +260,6 @@ fn parse_hex_digit(digit: u8) -> Result<u8, ()> {
         b'0' ... b'9' => Ok(digit - b'0'),
         b'a' ... b'f' => Ok(digit - b'a'),
         b'A' ... b'F' => Ok(digit - b'A'),
-        _ => return Err(()),
+        _ => Err(()),
     }
 }

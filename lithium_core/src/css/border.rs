@@ -1,261 +1,285 @@
-use cssparser::{Parser, ParseError};
+// https://drafts.csswg.org/css-backgrounds/
+
+#![cfg_attr(feature = "cargo-clippy", allow(needless_range_loop))]
+
+use cssparser::Parser;
 #[cfg(test)]
 use cssparser::ParserInput;
-use Color;
 use theme::ElementStyle;
-use theme::element_style::{BorderStyle, LengthOrPercentage, border, corner};
-use super::{parse_color, parse_length_or_percentage, parse_length};
+use theme::element_style::{BorderStyle, border, corner};
+use Color;
+use super::{CssResult, error, syntax, value};
 
 const THIN_BORDER: f32 = 1.0;
 const MEDIUM_BORDER: f32 = 2.0;
 const THICK_BORDER: f32 = 3.0;
 
-pub fn border<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    unimplemented!()
-}
+// <br-width> || <br-style> || <color>
+//
+// https://drafts.csswg.org/css-backgrounds/#the-border-shorthands
+pub fn border<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    let (width, style, color) = syntax::one_or_more_of_3(parser, line_width, line_style, value::color)?;
 
-pub fn border_bottom<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    unimplemented!()
-}
+    for i in 0..4 {
+        if let Some(width) = width {
+            element_style.border[i].width = width;
+        }
 
-pub fn border_left<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    unimplemented!()
-}
+        if let Some(style) = style {
+            element_style.border[i].style = style;
+        }
 
-pub fn border_right<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    unimplemented!()
-}
-
-pub fn border_top<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    unimplemented!()
-}
-
-pub fn border_bottom_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_side_color(parser, element_style, border::BOTTOM)
-}
-
-pub fn border_left_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_side_color(parser, element_style, border::LEFT)
-}
-
-pub fn border_right_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_side_color(parser, element_style, border::RIGHT)
-}
-
-pub fn border_top_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_side_color(parser, element_style, border::TOP)
-}
-
-pub fn border_side_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle, side: usize) -> Result<(), ParseError<'i, ()>> {
-    element_style.border[side].color = parse_color(parser)?;
-    Ok(())
-}
-
-pub fn border_bottom_left_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_corner_radius(parser, element_style, corner::BOTTOM_LEFT)
-}
-
-pub fn border_bottom_right_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_corner_radius(parser, element_style, corner::BOTTOM_RIGHT)
-}
-
-pub fn border_top_left_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_corner_radius(parser, element_style, corner::TOP_LEFT)
-}
-
-pub fn border_top_right_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_corner_radius(parser, element_style, corner::TOP_RIGHT)
-}
-
-pub fn border_corner_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle, corner: usize) -> Result<(), ParseError<'i, ()>> {
-    if Ok(()) == parser.try(|parser| parser.expect_ident_matching("initial")) {
-        element_style.border_radius[corner].x = LengthOrPercentage::Length(0.0);
-        element_style.border_radius[corner].y = LengthOrPercentage::Length(0.0);
-    } else {
-        element_style.border_radius[corner].x = parse_length_or_percentage(parser)?;
-
-        if let Ok(value) = parser.try(parse_length_or_percentage) {
-            element_style.border_radius[corner].y = value;
-        } else {
-            element_style.border_radius[corner].y = element_style.border_radius[corner].x;
+        if let Some(color) = color {
+            element_style.border[i].color = color;
         }
     }
 
     Ok(())
 }
 
-pub fn border_bottom_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_side_style(parser, element_style, border::BOTTOM)
+pub fn bottom<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side(parser, element_style, border::BOTTOM)
 }
 
-pub fn border_left_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_side_style(parser, element_style, border::LEFT)
+pub fn left<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side(parser, element_style, border::LEFT)
 }
 
-pub fn border_top_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_side_style(parser, element_style, border::TOP)
+pub fn right<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side(parser, element_style, border::RIGHT)
 }
 
-pub fn border_right_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_side_style(parser, element_style, border::RIGHT)
+pub fn top<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side(parser, element_style, border::TOP)
 }
 
-pub fn border_side_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle, border: usize) -> Result<(), ParseError<'i, ()>> {
-    element_style.border[border].style = parse_border_style(parser)?;
+// <line-width> || <line-style> || <color>
+//
+// https://drafts.csswg.org/css-backgrounds/#the-border-shorthands
+fn side<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle, side: usize) -> CssResult<'i, ()> {
+    let (width, style, color) = syntax::one_or_more_of_3(parser, line_width, line_style, value::color)?;
+
+    element_style.border[side].width = width.unwrap_or(MEDIUM_BORDER);
+    element_style.border[side].style = style.unwrap_or(BorderStyle::None);
+    element_style.border[side].color = color.unwrap_or(Color::black());
+
     Ok(())
 }
 
-pub fn border_bottom_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_side_width(parser, element_style, border::BOTTOM)
+pub fn bottom_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side_color(parser, element_style, border::BOTTOM)
 }
 
-pub fn border_top_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_side_width(parser, element_style, border::TOP)
+pub fn left_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side_color(parser, element_style, border::LEFT)
 }
 
-pub fn border_left_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_side_width(parser, element_style, border::LEFT)
+pub fn right_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side_color(parser, element_style, border::RIGHT)
 }
 
-pub fn border_right_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    border_side_width(parser, element_style, border::RIGHT)
+pub fn top_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side_color(parser, element_style, border::TOP)
 }
 
-pub fn border_side_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle, border: usize) -> Result<(), ParseError<'i, ()>> {
-    element_style.border[border].width = parse_border_width(parser)?;
+pub fn side_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle, side: usize) -> CssResult<'i, ()> {
+    element_style.border[side].color = value::color(parser)?;
     Ok(())
 }
 
-pub fn border_color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    if Ok(()) == parser.try(|parser| parser.expect_ident_matching("initial")) {
-        for i in 0..4 {
-            element_style.border[i].color = Color::black();
-        }
-    } else {
-        let colors = parse_four_values(parser, parse_color)?;
+pub fn bottom_left_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    corner_radius(parser, element_style, corner::BOTTOM_LEFT)
+}
 
-        for i in 0..4 {
-            element_style.border[i].color = colors[i];
-        }
+pub fn bottom_right_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    corner_radius(parser, element_style, corner::BOTTOM_RIGHT)
+}
+
+pub fn top_left_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    corner_radius(parser, element_style, corner::TOP_LEFT)
+}
+
+pub fn top_right_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    corner_radius(parser, element_style, corner::TOP_RIGHT)
+}
+
+// <length-percentage>{1,2}
+//
+// https://drafts.csswg.org/css-backgrounds/#the-border-radius
+fn corner_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle, corner: usize) -> CssResult<'i, ()> {
+    element_style.border_radius[corner].x = value::length_or_percentage(parser)?;
+    element_style.border_radius[corner].y = parser.try(value::length_or_percentage).unwrap_or(element_style.border_radius[corner].x);
+
+    Ok(())
+}
+
+pub fn bottom_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side_style(parser, element_style, border::BOTTOM)
+}
+
+pub fn left_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side_style(parser, element_style, border::LEFT)
+}
+
+pub fn top_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side_style(parser, element_style, border::TOP)
+}
+
+pub fn right_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side_style(parser, element_style, border::RIGHT)
+}
+
+pub fn side_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle, side: usize) -> CssResult<'i, ()> {
+    element_style.border[side].style = line_style(parser)?;
+    Ok(())
+}
+
+pub fn bottom_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side_width(parser, element_style, border::BOTTOM)
+}
+
+pub fn top_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side_width(parser, element_style, border::TOP)
+}
+
+pub fn left_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side_width(parser, element_style, border::LEFT)
+}
+
+pub fn right_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    side_width(parser, element_style, border::RIGHT)
+}
+
+pub fn side_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle, side: usize) -> CssResult<'i, ()> {
+    element_style.border[side].width = line_width(parser)?;
+    Ok(())
+}
+
+pub fn border_image<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    error("unimplemented")
+}
+
+pub fn image_outset<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    error("unimplemented")
+}
+
+pub fn image_repeat<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    error("unimplemented")
+}
+
+pub fn image_slice<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    error("unimplemented")
+}
+
+pub fn image_source<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    error("unimplemented")
+}
+
+pub fn image_width<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    error("unimplemented")
+}
+
+// <length-percentage>{1,4} [ / <length-percentage>{1,4} ]?
+//
+// https://drafts.csswg.org/css-backgrounds/#the-border-radius
+pub fn radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    let radii = four_values(parser, value::length_or_percentage)?;
+    let radii2 = syntax::maybe(parser, |parser| {
+        parser.expect_delim('/')?;
+        four_values(parser, value::length_or_percentage)
+    })?;
+
+    for i in 0..4 {
+        element_style.border_radius[i].x = radii[i];
+        element_style.border_radius[i].y = radii2.unwrap_or(radii)[i];
     }
 
     Ok(())
 }
 
-pub fn border_image<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    unimplemented!()
-}
+// <color>{1,4} 
+//
+// https://drafts.csswg.org/css-backgrounds/#the-border-color
+pub fn color<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    let colors = four_values(parser, value::color)?;
 
-pub fn border_image_outset<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    unimplemented!()
-}
-
-pub fn border_image_repeat<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    unimplemented!()
-}
-
-pub fn border_image_slice<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    unimplemented!()
-}
-
-pub fn border_image_source<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    unimplemented!()
-}
-
-pub fn border_image_width<'i, 'tt>(_parser: &mut Parser<'i, 'tt>, _element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    unimplemented!()
-}
-
-pub fn border_radius<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    if Ok(()) == parser.try(|parser| parser.expect_ident_matching("initial")) {
-        for i in 0..4 {
-            element_style.border_radius[i].x = LengthOrPercentage::Length(0.0);
-            element_style.border_radius[i].y = LengthOrPercentage::Length(0.0);
-        }
-    } else {
-        let lens = parse_four_values(parser, parse_length_or_percentage)?;
-
-        for i in 0..4 {
-            element_style.border_radius[i].x = lens[i];
-            element_style.border_radius[i].y = lens[i];
-        }
+    for i in 0..4 {
+        element_style.border[i].color = colors[i];
     }
 
     Ok(())
 }
 
-pub fn border_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    if Ok(()) == parser.try(|parser| parser.expect_ident_matching("initial")) {
-        for i in 0..4 {
-            element_style.border[i].style = None;
-        }
-    } else {
-        let styles = parse_four_values(parser, parse_border_style)?;
+// <line-style>{1,4}
+//
+// https://drafts.csswg.org/css-backgrounds/#the-border-style
+pub fn style<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    let styles = four_values(parser, line_style)?;
 
-        for i in 0..4 {
-            element_style.border[i].style = styles[i];
-        }
+    for i in 0..4 {
+        element_style.border[i].style = styles[i];
     }
 
     Ok(())
 }
 
-pub fn border_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> Result<(), ParseError<'i, ()>> {
-    if Ok(()) == parser.try(|parser| parser.expect_ident_matching("initial")) {
-        for i in 0..4 {
-            element_style.border[i].width = MEDIUM_BORDER;
-        }
-    } else {
-        let widths = parse_four_values(parser, parse_border_width)?;
+// <line-width>{1,4}
+//
+// https://drafts.csswg.org/css-backgrounds/#the-border-width
+pub fn width<'i, 'tt>(parser: &mut Parser<'i, 'tt>, element_style: &mut ElementStyle) -> CssResult<'i, ()> {
+    let widths = four_values(parser, line_width)?;
 
-        for i in 0..4 {
-            element_style.border[i].width = widths[i];
-        }
+    for i in 0..4 {
+        element_style.border[i].width = widths[i];
     }
 
     Ok(())
 }
 
-fn parse_border_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<Option<BorderStyle>, ParseError<'i, ()>> {
+// <line-style> = none | hidden | dotted | dashed | solid | double | groove | ridge | inset | outset
+fn line_style<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> CssResult<'i, BorderStyle> {
     let ident = parser.expect_ident()?;
 
     Ok(match_ignore_ascii_case! { ident.as_ref(),
-        "none" | "initial" | "hidden" => None,
-         "dotted" => Some(BorderStyle::Dotted),
-         "dashed" => Some(BorderStyle::Dashed),
-         "solid" => Some(BorderStyle::Solid),
-         "double" => Some(BorderStyle::Double),
-         "groove" => Some(BorderStyle::Groove),
-         "ridge" => Some(BorderStyle::Ridge),
-         "inset" => Some(BorderStyle::Inset),
-         "outset" => Some(BorderStyle::Outset),
-        _ => return Err(ParseError::Custom(())),
+        "none" | "hidden" => BorderStyle::None,
+         "dotted" => BorderStyle::Dotted,
+         "dashed" => BorderStyle::Dashed,
+         "solid" => BorderStyle::Solid,
+         "double" => BorderStyle::Double,
+         "groove" => BorderStyle::Groove,
+         "ridge" => BorderStyle::Ridge,
+         "inset" => BorderStyle::Inset,
+         "outset" => BorderStyle::Outset,
+        _ => return error("invalid border style"),
     })
 }
 
-fn parse_border_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> Result<f32, ParseError<'i, ()>> {
-    if let Ok(ident) = parser.try(|parser| parser.expect_ident()) {
-        Ok(match_ignore_ascii_case! { ident.as_ref(),
-            "thin" => THIN_BORDER,
-            "medium" | "initial" => MEDIUM_BORDER,
-            "thick" => THICK_BORDER,
-            _ => return Err(ParseError::Custom(())),
-        })
-    } else {
-        parse_length(parser)
-    }
+// <line-width> = <length> | thin | medium | thick
+fn line_width<'i, 'tt>(parser: &mut Parser<'i, 'tt>) -> CssResult<'i, f32> {
+    syntax::one_of_2(parser,
+        value::length,
+        |parser| {
+            let ident = parser.expect_ident()?;
+            Ok(match_ignore_ascii_case! { ident.as_ref(),
+                "thin" => THIN_BORDER,
+                "medium" | "initial" => MEDIUM_BORDER,
+                "thick" => THICK_BORDER,
+                _ => return error("invalid width"),
+            })
+        }
+    )
 }
 
-fn parse_four_values<'i, 'tt, F, R>(parser: &mut Parser<'i, 'tt>, f: F) -> Result<[R; 4], ParseError<'i, ()>>
+fn four_values<'i, 'tt, F, R>(parser: &mut Parser<'i, 'tt>, f: F) -> CssResult<'i, [R; 4]>
   where
-    F: Copy + for<'tt2> Fn(&mut Parser<'i, 'tt2>) -> Result<R, ParseError<'i, ()>>,
+    F: for<'tt2> Fn(&mut Parser<'i, 'tt2>) -> CssResult<'i, R>,
     R: Copy
 {
     let value1 = f(parser)?;
     
-    if let Ok(value2) = parser.try(f) {
-        if let Ok(value3) = parser.try(f) {
-            if let Ok(value4) = parser.try(f) {
+    if let Ok(value2) = parser.try(&f) {
+        if let Ok(value3) = parser.try(&f) {
+            if let Ok(value4) = parser.try(&f) {
                 Ok([value1, value2, value3, value4])
             } else {
                 Ok([value1, value2, value3, value2])
@@ -277,12 +301,12 @@ fn test_four_values() {
         ("1px 2px 3px 4px", [1.0, 2.0, 3.0, 4.0]),
     ]
     {
-        assert_eq!(parse_four_values(&mut Parser::new(&mut ParserInput::new(a)), parse_length).unwrap(), b);
+        assert_eq!(four_values(&mut Parser::new(&mut ParserInput::new(a)), value::length).unwrap(), b);
     }
 }
 
 #[test]
-fn test_border_width() {
+fn test_line_width() {
     for &(a, b) in &[
         ("1px",     1.0),
         ("thin",    THIN_BORDER),
@@ -290,6 +314,6 @@ fn test_border_width() {
         ("medium",  MEDIUM_BORDER),
     ]
     {
-        assert_eq!(parse_border_width(&mut Parser::new(&mut ParserInput::new(a))).unwrap(), b);
+        assert_eq!(line_width(&mut Parser::new(&mut ParserInput::new(a))).unwrap(), b);
     }
 }

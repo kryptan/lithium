@@ -5,20 +5,19 @@ extern crate lithium_webrender;
 extern crate gleam;
 extern crate glutin;
 extern crate webrender;
-extern crate webrender_traits;
+extern crate webrender_api;
 
 use std::thread;
 use gleam::gl;
-use webrender_traits::{ColorF, Epoch};
-use webrender_traits::{DeviceUintSize, LayoutPoint, LayoutRect, LayoutSize};
-use webrender_traits::{PipelineId, TransformStyle};
-use webrender_traits::{RenderApi};
-use lithium_core::Widget;
-use lithium_core::Theme;
+use webrender_api::{ColorF, Epoch};
+use webrender_api::{DeviceUintSize, LayoutPoint, LayoutRect, LayoutSize};
+use webrender_api::{PipelineId, TransformStyle};
+use webrender_api::{RenderApi};
+use lithium_core::{Vec2, Widget, Theme};
 
 struct Notifier;
 
-impl webrender_traits::RenderNotifier for Notifier {
+impl webrender_api::RenderNotifier for Notifier {
     fn new_frame_ready(&mut self) {
     }
 
@@ -122,19 +121,19 @@ fn process_events(gui: &mut lithium_core::Gui, event_loop: &glutin::EventsLoop, 
 
 fn render(gui: &lithium_core::Gui, pipeline_id: PipelineId, (width, height): (u32, u32), epoch: Epoch, api: &RenderApi) {
     let layout_size = LayoutSize::new(width as f32, height as f32);
-    let mut builder = webrender_traits::DisplayListBuilder::new(pipeline_id, layout_size);
+    let mut builder = webrender_api::DisplayListBuilder::new(pipeline_id, layout_size);
     let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
     builder.push_stacking_context(
-        webrender_traits::ScrollPolicy::Fixed,
+        webrender_api::ScrollPolicy::Fixed,
         bounds,
         None,
         TransformStyle::Flat,
         None,
-        webrender_traits::MixBlendMode::Normal,
+        webrender_api::MixBlendMode::Normal,
         Vec::new()
     );
 
-    lithium_webrender::build(gui.scene.commands(), &mut builder);
+    lithium_webrender::build(Vec2::new(width as f64, height as f64), gui.scene.commands(), &mut builder);
     
     builder.pop_stacking_context();
 

@@ -31,6 +31,7 @@ impl Var {
     }
 }
 
+#[derive(Debug)]
 pub struct Constraint<E: Expression> {
     pub expr: E,
     pub positive: bool,

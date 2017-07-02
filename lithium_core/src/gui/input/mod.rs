@@ -32,10 +32,8 @@ pub struct Input {
 impl ButtonState {
     fn advance(&mut self) {
         *self = match *self {
-            ButtonState::JustPressed => ButtonState::Pressed,
-            ButtonState::JustReleased => ButtonState::Released,
-            ButtonState::Pressed => ButtonState::Pressed,
-            ButtonState::Released => ButtonState::Released,
+            ButtonState::JustPressed | ButtonState::Pressed => ButtonState::Pressed,
+            ButtonState::JustReleased | ButtonState::Released => ButtonState::Released,
         }
     }
 
@@ -79,7 +77,7 @@ impl Input {
             }
         }
 
-        return None;
+        None
     }
 
     pub fn advance(&mut self) {
@@ -104,8 +102,8 @@ impl Input {
     }
 
     pub fn event(&mut self, event: &Event) {
-        match event {
-            &Event::MouseMoved(position) => {
+        match *event {
+            Event::MouseMoved(position) => {
                 if self.mouse.is_none() {
                     self.mouse = Some(Mouse::default());
                 }
@@ -114,13 +112,13 @@ impl Input {
                     mouse.position = position;
                 }
             },
-            &Event::MouseEntered => {
+            Event::MouseEntered => {
                 self.mouse = Some(Mouse::default());
             },
-            &Event::MouseLeft => {
+            Event::MouseLeft => {
                 self.mouse = None;
             },
-            &Event::MouseButton(button, pressed) => {
+            Event::MouseButton(button, pressed) => {
                 if let Some(ref mut mouse) = self.mouse {
                     if pressed {
                         mouse.press(button);
@@ -129,7 +127,7 @@ impl Input {
                     }
                 }
             }
-            &Event::Touch(touch_event) => {
+            Event::Touch(touch_event) => {
                 match touch_event.phase {
                     event::TouchPhase::Started => {
                         if self.touches.iter().all(|&touch| touch.id != touch_event.id) {
@@ -159,14 +157,14 @@ impl Input {
                     }
                 }
             },
-            &Event::Key(key, pressed) => {
+            Event::Key(key, pressed) => {
                 if pressed {
                     self.keyboard.press(key);
                 } else {
                     self.keyboard.release(key);
                 }
             }
-            &Event::Char(char) => {
+            Event::Char(char) => {
                 self.keyboard.enter_char(char);
             },
         }

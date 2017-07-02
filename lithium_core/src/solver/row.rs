@@ -81,7 +81,7 @@ impl Row {
     pub fn solve_for_symbol(&mut self, symbol: Symbol) {
         let k = -1.0 / self.cells.remove(&symbol).unwrap();
         self.constant *= k;
-        for (_, v) in &mut self.cells {
+        for v in &mut self.cells.values_mut() {
             *v *= k;
         }
     }

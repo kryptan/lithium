@@ -18,7 +18,8 @@ pub mod corner {
 
 #[derive(Clone, Debug)]
 pub struct ElementStyle {
-    pub background_images: Vec<BackgroundImage>,
+    pub background_layers: Vec<BackgroundLayer>,
+    pub background_color: Color,
     pub font_color: Color,
     pub font: Arc<Font>,
     pub box_shadows: Vec<Shadow>,
@@ -29,6 +30,14 @@ pub struct ElementStyle {
     pub outline: Outline,
     pub overflow: Overflow,
     pub opacity: f32,
+    pub isolate: bool,
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum PositionCoordinate {
+    Length(f32),
+    LengthOpposite(f32),
+    Percentage(f32),
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -36,24 +45,24 @@ pub struct Image {
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct BackgroundImage {
-    pub image: BackgroundPicture,
+pub struct BackgroundLayer {
+    pub image: BackgroundImage,
     pub attachment: BackgroundAttachment,
     pub blend_mode: BackgroundBlendMode,
     pub clip: BackgroundBox,
     pub repeat_x: BackgroundRepeat,
     pub repeat_y: BackgroundRepeat,
-    pub position: Vec2<LengthOrPercentage>,
+    pub position: Vec2<PositionCoordinate>,
     pub size: BackgroundSize,
     pub origin: BackgroundBox,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum BackgroundPicture {
+pub enum BackgroundImage {
+    None,
     Image(Image),
     LinearGradient(LinearGradient),
     RadialGradient(RadialGradient),
-    Color(Color),
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -104,7 +113,6 @@ pub enum BackgroundBox {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum BackgroundSize {
-    Auto,
     Cover,
     Contain,
     Size(Vec2<Option<LengthOrPercentage>>),
@@ -112,7 +120,7 @@ pub enum BackgroundSize {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct LinearGradient {
-    pub angle_or_corner: AngleOrCorner,
+    pub direction: AngleOrCorner,
     pub stops: Vec<ColorStop>,
     pub repeating: bool,
 }
@@ -120,21 +128,24 @@ pub struct LinearGradient {
 #[derive(Clone, PartialEq, Debug)]
 pub struct RadialGradient {
     pub shape: RadialGradientShape,
-    pub position: Vec2<LengthOrPercentage>,
+    pub position: Vec2<PositionCoordinate>,
     pub stops: Vec<ColorStop>,
     pub repeating: bool,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum RadialGradientShape {
-    Circle,
-    Ellipse,
+    Circle(RadialGradientExtent),
+    Ellipse(RadialGradientExtent),
+    Ellipse2(Vec2<LengthOrPercentage>),
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+pub enum RadialGradientExtent {
     ClosestSide,
     FarthestSide,
     ClosestCorner,
     FarthestCorner,
-    Length(f32),
-    Size(Vec2<LengthOrPercentage>),
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -149,7 +160,7 @@ pub enum AngleOrCorner {
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct ColorStop {
     pub color: Color,
-    pub length_or_percentage: LengthOrPercentage,
+    pub position: Option<LengthOrPercentage>,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -159,9 +170,16 @@ pub enum LengthOrPercentage {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
+pub enum LengthOrPercentageOrAuto {
+    Auto,
+    Length(f32),
+    Percentage(f32),
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Border {
     pub width: f32,
-    pub style: Option<BorderStyle>,
+    pub style: BorderStyle,
     pub color: Color,
     pub image_outset: LengthOrPercentage,
     pub image_width: LengthOrPercentage,
@@ -185,6 +203,7 @@ pub enum BorderImageRepeat {
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum BorderStyle {
+    None,
     Dotted,
     Dashed,
     Solid,
@@ -198,7 +217,7 @@ pub enum BorderStyle {
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Outline {
     pub color: Color,
-    pub style: Option<BorderStyle>,
+    pub style: BorderStyle,
     pub width: f32,
 }
 
@@ -235,7 +254,8 @@ pub enum Overflow {
 impl Default for ElementStyle {
     fn default() -> Self {
         ElementStyle {
-            background_images: Vec::new(),
+            background_layers: Vec::new(),
+            background_color: Color::transparent(),
             font_color: Color::transparent(),
             font: Arc::new(ErrorFont),
             box_shadows: Vec::new(),
@@ -246,6 +266,7 @@ impl Default for ElementStyle {
             outline: Outline::default(),
             overflow: Overflow::default(),
             opacity: 1.0,
+            isolate: false,
         }
     }
 }
@@ -254,7 +275,7 @@ impl Default for Border {
     fn default() -> Self {
         Border {
             width: 0.0,
-            style: None,
+            style: BorderStyle::None,
             color: Color::transparent(),
             image_outset: LengthOrPercentage::Length(0.0),
             image_width: LengthOrPercentage::Length(1.0),
@@ -267,22 +288,22 @@ impl Default for Outline {
     fn default() -> Self {
         Outline {
             color: Color::transparent(),
-            style: None,
+            style: BorderStyle::None,
             width: 0.0,
         }
     }
 }
 
-impl Default for BackgroundImage {
+impl Default for BackgroundLayer {
     fn default() -> Self {
-        BackgroundImage {
-            image: BackgroundPicture::Color(Color::transparent()),
+        BackgroundLayer {
+            image: BackgroundImage::None,
             attachment: BackgroundAttachment::default(),
             blend_mode: BackgroundBlendMode::default(),
             clip: BackgroundBox::default(),
             repeat_x: BackgroundRepeat::default(),
             repeat_y: BackgroundRepeat::default(),
-            position: Vec2::new(LengthOrPercentage::Percentage(0.0), LengthOrPercentage::Percentage(0.0)),
+            position: Vec2::new(PositionCoordinate::Percentage(0.0), PositionCoordinate::Percentage(0.0)),
             size: BackgroundSize::default(),
             origin: BackgroundBox::default(),
         }
@@ -291,7 +312,7 @@ impl Default for BackgroundImage {
 
 impl PartialEq<ElementStyle> for ElementStyle {
     fn eq(&self, other: &ElementStyle) -> bool {
-        self.background_images == other.background_images &&
+        self.background_layers == other.background_layers &&
         self.font_color == other.font_color &&
         self.box_shadows == other.box_shadows &&
         self.filters == other.filters &&
@@ -300,6 +321,12 @@ impl PartialEq<ElementStyle> for ElementStyle {
         self.outline == other.outline &&
         self.overflow == other.overflow &&
         Arc::ptr_eq(&self.font, &other.font)
+    }
+}
+
+impl Default for BackgroundSize {
+    fn default() -> Self {
+        BackgroundSize::Size(Vec2::new(None, None))
     }
 }
 
@@ -319,4 +346,3 @@ derive_default!(BackgroundBlendMode::Normal);
 derive_default!(BackgroundBox::PaddingBox);
 derive_default!(BorderImageRepeat::Stretch);
 derive_default!(BackgroundRepeat::Repeat);
-derive_default!(BackgroundSize::Auto);

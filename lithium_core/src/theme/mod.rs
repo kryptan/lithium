@@ -34,7 +34,7 @@ impl Theme {
     }
 
     pub fn from_css_str(css: &str) -> Self {
-        css::parse_theme(css).unwrap()
+        css::theme(css).unwrap()
     }
 
     pub fn color(&self, style_variant: StyleVariant, id: ColorId) -> Option<Color> {
