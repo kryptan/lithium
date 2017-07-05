@@ -4,7 +4,7 @@ extern crate lithium_core;
 use webrender_api::{DisplayListBuilder, ColorF, GradientStop, LayoutPoint, LayoutSize, LayoutRect, ComplexClipRegion};
 use lithium_core::gui::scene::Command;
 use lithium_core::theme::ElementStyle;
-use lithium_core::theme::element_style::{BackgroundImage, LengthOrPercentage, ColorStop, Border, BorderStyle, border, corner};
+use lithium_core::theme::element_style::{BackgroundImage, LengthOrPercentage, ColorStop, Border, BorderStyle, PositionCoordinate, RadialGradientShape, border, corner};
 use lithium_core::{Color, Vec2, Rect};
 
 fn convert_color(color: Color) -> ColorF {
@@ -56,12 +56,12 @@ fn build_element(layout_size: Vec2<f64>, place: Rect<f64>, style: &ElementStyle,
     let radii = if style.border_radius.iter().any(
         |&radius|
             radius != Vec2::new(LengthOrPercentage::Length(0.0), LengthOrPercentage::Length(0.0)) &&
-                radius != Vec2::new(LengthOrPercentage::Percentage(0.0), LengthOrPercentage::Percentage(0.0))
+            radius != Vec2::new(LengthOrPercentage::Percentage(0.0), LengthOrPercentage::Percentage(0.0))
     ) {
         let mut radii = [Vec2::zero(); 4];
 
         for i in 0..4 {
-            radii[i] = corner_radius(style.border_radius[i], size);
+            radii[i] = length_or_percentage_vec(style.border_radius[i], size);
         }
 
         // https://drafts.csswg.org/css-backgrounds/#corner-overlap
@@ -149,9 +149,15 @@ fn build_element(layout_size: Vec2<f64>, place: Rect<f64>, style: &ElementStyle,
                 );
             }
             BackgroundImage::RadialGradient(ref gradient) => {
-                // FIXME: do the actual calculation here.
-                let center = place.top_left();
-                let radius = Vec2::new(50.0, 50.0);
+                let center = position(gradient.position, place);
+
+                let radius = match gradient.shape {
+                    // FIXME: do the actual calculation here.
+                    RadialGradientShape::Circle(_extent) => Vec2::new(50.0, 50.0),
+                    // FIXME: do the actual calculation here.
+                    RadialGradientShape::Ellipse(_extent) => Vec2::new(50.0, 50.0),
+                    RadialGradientShape::Ellipse2(radius) => length_or_percentage_vec(radius, size),
+                };
 
                 let stops = convert_stops(&gradient.stops, radius.y);
 
@@ -168,7 +174,7 @@ fn build_element(layout_size: Vec2<f64>, place: Rect<f64>, style: &ElementStyle,
                     gradient,
                     rect.size,
                     LayoutSize::zero(),
-                )
+                );
             }
             BackgroundImage::Image(ref _image) => {
             }
@@ -176,9 +182,6 @@ fn build_element(layout_size: Vec2<f64>, place: Rect<f64>, style: &ElementStyle,
     }
 
     if style.background_color.a != 0.0 {
-     //   println!("{:?}", style.background_color);
-     //   println!("{:?}", lithium_color_to_webrender(style.background_color));
-
         builder.push_rect(
             rect,
             rect,
@@ -208,17 +211,28 @@ fn build_element(layout_size: Vec2<f64>, place: Rect<f64>, style: &ElementStyle,
     }
 }
 
-fn corner_radius(radius: Vec2<LengthOrPercentage>, size: Vec2<f64>) -> Vec2<f64> {
-    let x = match radius.x {
-        LengthOrPercentage::Length(len) => len as f64,
-        LengthOrPercentage::Percentage(p) => (p as f64)*size.x,
-    };
+fn position(position: Vec2<PositionCoordinate>, place: Rect<f64>) -> Vec2<f64> {
+    Vec2::new(position_coordinate(position.x, place.left, place.right), position_coordinate(position.y, place.top, place.bottom))
+}
 
-    let y = match radius.y {
-        LengthOrPercentage::Length(len) => len as f64,
-        LengthOrPercentage::Percentage(p) => (p as f64)*size.y,
-    };
+fn position_coordinate(position: PositionCoordinate, start: f64, end: f64) -> f64 {
+    match position {
+        PositionCoordinate::Length(len) => start + len as f64,
+        PositionCoordinate::LengthOpposite(len) => end - len as f64,
+        PositionCoordinate::Percentage(percentage) => start + percentage as f64*(end - start),
+    }
+}
 
+fn length_or_percentage(value: LengthOrPercentage, max: f64) -> f64 {
+    match value {
+        LengthOrPercentage::Length(len) => len as f64,
+        LengthOrPercentage::Percentage(p) => (p as f64)*max,
+    }
+}
+
+fn length_or_percentage_vec(radius: Vec2<LengthOrPercentage>, size: Vec2<f64>) -> Vec2<f64> {
+    let x = length_or_percentage(radius.x, size.x);
+    let y = length_or_percentage(radius.y, size.y);
     Vec2::new(x, y)
 }
 

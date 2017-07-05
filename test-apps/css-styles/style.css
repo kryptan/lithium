@@ -1,51 +1,51 @@
 
-.background-linear0 {
-	background: linear-gradient(to left top, blue, blue 50%, red 55%, red);
+.test0 {
+	background: linear-gradient(to top, blue, blue 50%, red 55%, red);
 	border: dashed red 3px;
 	border-radius: 15px;
 }
 
-.background-solid {
+.test1 {
 	background: yellow;
 	border-radius: 15px;
+	border-top-left-radius: 50%;
 }
 
-
-.background-linear1 {
+.test2 {
 	background: linear-gradient(17deg, green, purple);
 	border: double red 3px;
 	border-radius: 15px;
 }
 
-.background-linear2 {
+.test3 {
 	background: linear-gradient(117deg, blue, white 20%, black 90px, red);
 	border: groove red 3px;
 	border-radius: 15px;
 } 
 
-.background-radial0 {
+.test4 {
 	background: radial-gradient(ellipse farthest-corner at 45px 45px, #00FFFF 0%, rgb(128, 128, 255) 50%, #0000FF 95%);
 	border: ridge red 3px;
 	border-radius: 15px;
 }
 
-.background-radial1 {
+.test5 {
 	background-image: radial-gradient(16px at 60px 50%, #000000 0%, #000000 14px, rgb(0, 0, 0) 18px, rgb(0, 70, 0) 19px);
 	border: dotted red 3px;
 	border-radius: 15px;
 }
 
-.border0 {
+.test6 {
 	background: linear-gradient(to right top, blue, black);
 	border: solid red 3px;
 	border-radius: 15px;
 }
 
-Dummy.background-solid,
-Dummy.background-linear0,
-Dummy.background-linear1,
-Dummy.background-linear2,
-Dummy.background-radial0,
-Dummy.background-radial1,
-Dummy.border0
+Dummy.test0,
+Dummy.test1,
+Dummy.test2,
+Dummy.test3,
+Dummy.test4,
+Dummy.test5,
+Dummy.test6
 {}

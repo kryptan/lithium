@@ -10,7 +10,7 @@ extern crate webrender_api;
 use std::thread;
 use gleam::gl;
 use webrender_api::{ColorF, Epoch};
-use webrender_api::{DeviceUintSize, LayoutPoint, LayoutRect, LayoutSize};
+use webrender_api::{DeviceUintPoint, DeviceUintSize, DeviceUintRect, LayoutPoint, LayoutRect, LayoutSize};
 use webrender_api::{PipelineId, TransformStyle};
 use webrender_api::{RenderApi};
 use lithium_core::{Vec2, Widget, Theme};
@@ -67,9 +67,12 @@ fn window_thread<W: Widget>(mut widget: W, theme: Theme, window_builder: glutin:
     let mut epoch = Epoch(0);
     let pipeline_id = PipelineId(0, 0);
 
+    api.set_root_pipeline(pipeline_id);
+
     let mut gui = lithium_core::Gui::new(theme);
 
-    while process_events(&mut gui, &event_loop, &window, &mut width, &mut height) {
+    let mut resized = false;
+    while process_events(&mut gui, &event_loop, &window, &mut width, &mut height, &mut resized) {
         let place = widget.appear(&mut gui);
 
         let hidpi_factor = window.hidpi_factor() as f64;
@@ -80,6 +83,12 @@ fn window_thread<W: Widget>(mut widget: W, theme: Theme, window_builder: glutin:
             (place.right) == width as f64/hidpi_factor,
             (place.bottom) == height as f64/hidpi_factor,
         ]);
+
+        if resized {
+            let size = DeviceUintSize::new(width, height);
+            api.set_window_parameters(size, DeviceUintRect::new(DeviceUintPoint::zero(), size));
+            resized = false;
+        }
 
         // render
         render(&gui, pipeline_id, (width, height), epoch, &api);
@@ -93,7 +102,7 @@ fn window_thread<W: Widget>(mut widget: W, theme: Theme, window_builder: glutin:
     }
 }
 
-fn process_events(gui: &mut lithium_core::Gui, event_loop: &glutin::EventsLoop, window: &glutin::Window, width: &mut u32, height: &mut u32) -> bool {
+fn process_events(gui: &mut lithium_core::Gui, event_loop: &glutin::EventsLoop, window: &glutin::Window, width: &mut u32, height: &mut u32, resized: &mut bool) -> bool {
     let mut stop = false;
 
     event_loop.poll_events(|event| {
@@ -110,6 +119,7 @@ fn process_events(gui: &mut lithium_core::Gui, event_loop: &glutin::EventsLoop, 
                 glutin::WindowEvent::Resized(new_width, new_height) => {
                     *width = new_width;
                     *height = new_height;
+                    *resized = true;
                 }
                 _ => ()
             }
@@ -144,7 +154,6 @@ fn render(gui: &lithium_core::Gui, pipeline_id: PipelineId, (width, height): (u3
         LayoutSize::new(width as f32, height as f32),
         builder.finalize(),
         true);
-    api.set_root_pipeline(pipeline_id);
     api.generate_frame(None);
 }
 
